@@ -1,0 +1,12 @@
+[package]
+name = "telemetry"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+opentelemetry = { version = "0.27.1", features = ["metrics"] }
+opentelemetry_sdk = { version = "0.27.1", features = [
+    "spec_unstable_metrics_views",
+    "rt-tokio",
+] }
+opentelemetry-otlp = { version = "0.27.0", features = ["metrics"] }
