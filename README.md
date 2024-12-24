@@ -1,3 +1,3 @@
 # ponix
 
-A monorepo for ponix software
+A monorepo for ponix software written in rust
