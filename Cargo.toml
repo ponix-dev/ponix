@@ -1,8 +1,0 @@
-[workspace]
-
-resolver = "2"
-
-members = ["services/event_data_logger", "services/ns_event_bridge", "services/peripheral_esp32s3"]
-
-[workspace.dependencies]
-telemetry = { path = "libs/telemetry" }

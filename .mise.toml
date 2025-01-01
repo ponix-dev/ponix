@@ -1,3 +1,5 @@
 [tools]
-rust = "latest"
+golang = "latest"
+mage = "latest"
 just = "latest"
+sqlc = "latest"
