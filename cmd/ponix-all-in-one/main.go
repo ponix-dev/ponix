@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	serviceName = "management-service"
+	serviceName = "ponix-all-in-one"
 )
 
 func main() {
