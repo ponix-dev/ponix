@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../ponix-end-devices"
+		},
+		{
+			"path": "../../../../fetch/receipt-detail-billboard-service"
 		}
 	],
 	"settings": {

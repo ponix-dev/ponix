@@ -12,6 +12,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/magefile/mage v1.15.0
 	github.com/rs/xid v1.6.0
+	github.com/sethvargo/go-envconfig v1.1.0
 	go.opentelemetry.io/otel v1.33.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.33.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0

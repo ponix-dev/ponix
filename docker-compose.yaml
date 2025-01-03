@@ -1,5 +1,14 @@
 name: ponix
 services:
+  management-service:
+    image: management-service:latest
+    ports:
+      - 3000:3000
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318
+      - ENVIRONMENT=local
+    depends_on:
+      - otel-lgtm
   otel-lgtm:
     image: grafana/otel-lgtm
     ports:

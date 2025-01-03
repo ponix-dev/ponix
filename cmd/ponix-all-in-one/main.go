@@ -12,6 +12,7 @@ import (
 	"connectrpc.com/validate"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ponix-dev/ponix/internal/conf"
 	"github.com/ponix-dev/ponix/internal/connectrpc"
 	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/mux"
@@ -28,6 +29,12 @@ var (
 func main() {
 	logger := slog.Default()
 	ctx := context.Background()
+
+	cfg, err := conf.GetConfig[conf.AllInOne](ctx)
+	if err != nil {
+		logger.Error("could not get config", slog.Any("err", err))
+		os.Exit(1)
+	}
 
 	resource, err := telemetry.NewResource(serviceName)
 	if err != nil {
@@ -66,7 +73,7 @@ func main() {
 	srv, err := mux.New(
 		mux.NewChiMux(chi.NewRouter()),
 		mux.WithLogger(logger),
-		mux.WithPort("3000"),
+		mux.WithPort(cfg.Port),
 
 		// System
 		mux.WithHandler(ponixv1connect.NewSystemServiceHandler(

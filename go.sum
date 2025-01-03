@@ -1,11 +1,7 @@
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.1-20241127180247-a33202765966.1 h1:v223wh/bhlSHSc0tU9PXRWXHhkw3UWMtth7TmYGfHAQ=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.1-20241127180247-a33202765966.1/go.mod h1:/zlFuuECgFgewxwW6qQKgvMJ07YZkWlVkcSxEhJprJw=
-buf.build/gen/go/ponix/ponix/connectrpc/go v1.17.0-20250103035317-42800381673f.1 h1:whrTyr2ERPWUp/V3RHqn50ZZbZqJvbqt66BR5epWyWM=
-buf.build/gen/go/ponix/ponix/connectrpc/go v1.17.0-20250103035317-42800381673f.1/go.mod h1:uISinN4yootaHYuU0Ag+Wg42Lh+3YvX+8hJyrm5SCH4=
 buf.build/gen/go/ponix/ponix/connectrpc/go v1.17.0-20250103114916-fc275fdc346e.1 h1:acUMhJQv1UrPub9aAMALSWPRYQ+caViZ0jd/dEzu1UA=
 buf.build/gen/go/ponix/ponix/connectrpc/go v1.17.0-20250103114916-fc275fdc346e.1/go.mod h1:R6qvSwYOGinU7JlGY71vzi3nqEYdHL84eFQ80sfgWI4=
-buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.1-20250103035317-42800381673f.1 h1:Mr7+r2VXrqawsXXqTJinWpx8O9uT2CF2gFtmat1bXv8=
-buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.1-20250103035317-42800381673f.1/go.mod h1:sYRd2YleysE4n/6AX+OlgPKw+xEwc4OhcCjMBgu0zsE=
 buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.1-20250103114916-fc275fdc346e.1 h1:1S0iNAKFEttQGDcOYfYFcdTpgyAa5CkLwwtlb8dCs2w=
 buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.1-20250103114916-fc275fdc346e.1/go.mod h1:sYRd2YleysE4n/6AX+OlgPKw+xEwc4OhcCjMBgu0zsE=
 cel.dev/expr v0.19.1 h1:NciYrtDRIR0lNCnH1LFJegdjspNx9fI59O7TWcua/W4=
@@ -56,6 +52,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rs/xid v1.6.0 h1:fV591PaemRlL6JfRxGDEPl69wICngIQ3shQtzfy2gxU=
 github.com/rs/xid v1.6.0/go.mod h1:7XoLgs4eV+QndskICGsho+ADou8ySMSjJKDIan90Nz0=
+github.com/sethvargo/go-envconfig v1.1.0 h1:cWZiJxeTm7AlCvzGXrEXaSTCNgip5oJepekh/BOQuog=
+github.com/sethvargo/go-envconfig v1.1.0/go.mod h1:JLd0KFWQYzyENqnEPWWZ49i4vzZo/6nRidxI8YvGiHw=
 github.com/stoewer/go-strcase v1.3.0 h1:g0eASXYtp+yvN9fK8sH94oCIk0fau9uV1/ZdJ0AVEzs=
 github.com/stoewer/go-strcase v1.3.0/go.mod h1:fAH5hQ5pehh+j3nZfvwdk2RgEgQjAoM8wodgtPmh1xo=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

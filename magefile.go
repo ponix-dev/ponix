@@ -3,9 +3,26 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
+
+var (
+	baseDir = mageDir()
+)
+
+func mageDir() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		panic("wtf no base dir?")
+	}
+
+	return dir
+}
 
 type Stack mg.Namespace
 
@@ -33,7 +50,7 @@ type DB mg.Namespace
 
 // generates database code
 func (DB) Gen() error {
-	err := sh.Run("sqlc", "generate")
+	err := sh.Run("docker", "run", "--rm", "-v", baseDir+":/src", "-w", "/src", "sqlc/sqlc", "generate")
 	if err != nil {
 		return err
 	}
