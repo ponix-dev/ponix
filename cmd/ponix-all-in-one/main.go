@@ -15,6 +15,7 @@ import (
 	"github.com/ponix-dev/ponix/internal/connectrpc"
 	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/mux"
+	"github.com/ponix-dev/ponix/internal/protobuf"
 	"github.com/ponix-dev/ponix/internal/runner"
 	"github.com/ponix-dev/ponix/internal/telemetry"
 	"github.com/ponix-dev/ponix/internal/xid"
@@ -50,11 +51,11 @@ func main() {
 
 	telemetry.SetServiceTracer(tracerProvider)
 
-	systemMgr := domain.NewSystemManager(nil, xid.StringId)
-	systemInputMgr := domain.NewSystemInputManager(nil, xid.StringId)
-	nsMgr := domain.NewNetworkServerManager(nil, xid.StringId)
-	gatewayMgr := domain.NewGatewayManager(nil, xid.StringId)
-	edMgr := domain.NewEndDeviceManager(nil, xid.StringId)
+	systemMgr := domain.NewSystemManager(nil, xid.StringId, protobuf.Validate)
+	systemInputMgr := domain.NewSystemInputManager(nil, xid.StringId, protobuf.Validate)
+	nsMgr := domain.NewNetworkServerManager(nil, xid.StringId, protobuf.Validate)
+	gatewayMgr := domain.NewGatewayManager(nil, xid.StringId, protobuf.Validate)
+	edMgr := domain.NewEndDeviceManager(nil, xid.StringId, protobuf.Validate)
 
 	protovalidateInterceptor, err := validate.NewInterceptor()
 	if err != nil {
