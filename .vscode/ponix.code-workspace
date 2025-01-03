@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../ponix-protobuf"
+		},
+		{
+			"path": "../../ponix-end-devices"
+		}
+	],
+	"settings": {
+		"Prettier-SQL.SQLFlavourOverride": "postgresql",
+		"[sql]": {
+			"editor.formatOnSave": false
+		}
+	}
+}

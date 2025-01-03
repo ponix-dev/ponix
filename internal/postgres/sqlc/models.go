@@ -42,6 +42,12 @@ type NetworkServer struct {
 	IotPlatform int32
 }
 
+type Organization struct {
+	ID     string
+	Name   string
+	Status int32
+}
+
 type System struct {
 	ID             string
 	OrganizationID string
@@ -52,6 +58,7 @@ type System struct {
 type SystemInput struct {
 	ID           string
 	SystemID     string
+	Name         string
 	Status       int32
 	GrowMediumID pgtype.Text
 	TankID       pgtype.Text
@@ -60,4 +67,12 @@ type SystemInput struct {
 
 type Tank struct {
 	ID string
+}
+
+type User struct {
+	ID             string
+	OrganizationID string
+	FirstName      string
+	LastName       string
+	Status         int32
 }

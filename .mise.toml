@@ -1,8 +1,8 @@
 [tools]
 golang = "latest"
 mage = "latest"
-just = "latest"
 sqlc = "latest"
+atlas = "latest"
 
 [env]
 GOPROXY = ""
