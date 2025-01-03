@@ -27,9 +27,9 @@ func (handler *NetworkServerHandler) CreateNetworkServer(ctx context.Context, re
 	defer span.End()
 
 	ns := &iotv1.NetworkServer{
-		SystemId:    req.Msg.SystemId,
-		Name:        req.Msg.Name,
-		IotPlatform: req.Msg.IotPlatform,
+		SystemId:    req.Msg.GetSystemId(),
+		Name:        req.Msg.GetName(),
+		IotPlatform: req.Msg.GetIotPlatform(),
 	}
 
 	id, err := handler.networkServerManager.CreateNetworkServer(ctx, ns)

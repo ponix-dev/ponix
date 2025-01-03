@@ -35,7 +35,7 @@ func (mgr *SystemInputManager) CreateSystemInput(ctx context.Context, systemInpu
 		systemInput.SetId(mgr.stringId())
 	}
 
-	systemInput.Status = ponixv1.SystemInputStatus_SYSTEM_INPUT_STATUS_PENDING
+	systemInput.SetStatus(ponixv1.SystemInputStatus_SYSTEM_INPUT_STATUS_PENDING)
 
 	err := mgr.validate(systemInput)
 	if err != nil {

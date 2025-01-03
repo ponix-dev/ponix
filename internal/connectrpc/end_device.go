@@ -27,9 +27,9 @@ func (handler *EndDeviceHandler) CreateEndDevice(ctx context.Context, req *conne
 	defer span.End()
 
 	endDevice := &iotv1.EndDevice{
-		NetworkServerId: req.Msg.NetworkServerId,
-		SystemId:        req.Msg.SystemId,
-		Name:            req.Msg.Name,
+		NetworkServerId: req.Msg.GetNetworkServerId(),
+		SystemId:        req.Msg.GetSystemId(),
+		Name:            req.Msg.GetName(),
 	}
 
 	id, err := handler.endDeviceManager.CreateEndDevice(ctx, endDevice)

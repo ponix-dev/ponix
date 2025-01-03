@@ -29,24 +29,19 @@ func (handler *SystemInputHandler) CreateSystemInput(ctx context.Context, req *c
 	defer span.End()
 
 	si := &ponixv1.SystemInput{
-		Name: req.Msg.GetName(),
+		Name:     req.Msg.GetName(),
+		SystemId: req.Msg.GetSystemId(),
 	}
 
 	switch req.Msg.GetInputData().(type) {
 	case *ponixv1.CreateSystemInputRequest_Field:
-		si.InputData = &ponixv1.SystemInput_Field{
-			Field: &soilponicsv1.FieldData{},
-		}
+		si.SetField(&soilponicsv1.FieldData{})
 	case *ponixv1.CreateSystemInputRequest_GrowMedium:
-		si.InputData = &ponixv1.SystemInput_GrowMedium{
-			GrowMedium: &aquaponicsv1.GrowMediumData{
-				MediumType: req.Msg.GetGrowMedium().GetMediumType(),
-			},
-		}
+		si.SetGrowMedium(&aquaponicsv1.GrowMediumData{
+			MediumType: req.Msg.GetGrowMedium().GetMediumType(),
+		})
 	case *ponixv1.CreateSystemInputRequest_Tank:
-		si.InputData = &ponixv1.SystemInput_Tank{
-			Tank: &aquaponicsv1.TankData{},
-		}
+		si.SetTank(&aquaponicsv1.TankData{})
 	}
 
 	inputId, err := handler.systemInputManager.CreateSystemInput(ctx, si)

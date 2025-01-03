@@ -34,7 +34,7 @@ func (mgr *GatewayManager) CreateGateway(ctx context.Context, gateway *iotv1.Gat
 		gateway.SetId(mgr.stringId())
 	}
 
-	gateway.Status = iotv1.GatewayStatus_GATEWAY_STATUS_PENDING
+	gateway.SetStatus(iotv1.GatewayStatus_GATEWAY_STATUS_PENDING)
 
 	err := mgr.validate(gateway)
 	if err != nil {

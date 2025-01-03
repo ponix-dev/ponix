@@ -27,9 +27,9 @@ func (handler *GatewayHandler) CreateGateway(ctx context.Context, req *connect.R
 	defer span.End()
 
 	gateway := &iotv1.Gateway{
-		SystemId:        req.Msg.SystemId,
-		NetworkServerId: req.Msg.NetworkServerId,
-		Name:            req.Msg.Name,
+		SystemId:        req.Msg.GetSystemId(),
+		NetworkServerId: req.Msg.GetNetworkServerId(),
+		Name:            req.Msg.GetName(),
 	}
 
 	id, err := handler.gatewayManager.CreateGateway(ctx, gateway)

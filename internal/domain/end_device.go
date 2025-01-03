@@ -34,7 +34,7 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, endDevice *iot
 		endDevice.SetId(mgr.stringId())
 	}
 
-	endDevice.Status = iotv1.EndDeviceStatus_END_DEVICE_STATUS_PENDING
+	endDevice.SetStatus(iotv1.EndDeviceStatus_END_DEVICE_STATUS_PENDING)
 
 	err := mgr.validate(endDevice)
 	if err != nil {

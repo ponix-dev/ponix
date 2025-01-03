@@ -53,8 +53,8 @@ func (handler *SystemHandler) CreateSystem(ctx context.Context, req *connect.Req
 	defer span.End()
 
 	system := &ponixv1.System{
-		OrganizationId: req.Msg.OrganizationId,
-		Name:           req.Msg.Name,
+		OrganizationId: req.Msg.GetOrganizationId(),
+		Name:           req.Msg.GetName(),
 	}
 
 	id, err := handler.systemManager.CreateSystem(ctx, system)

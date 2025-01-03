@@ -34,7 +34,7 @@ func (mgr *NetworkServerManager) CreateNetworkServer(ctx context.Context, networ
 		networkServer.SetId(mgr.stringId())
 	}
 
-	networkServer.Status = iotv1.NetworkServerStatus_NETWORK_SERVER_STATUS_PENDING
+	networkServer.SetStatus(iotv1.NetworkServerStatus_NETWORK_SERVER_STATUS_PENDING)
 
 	err := mgr.validate(networkServer)
 	if err != nil {

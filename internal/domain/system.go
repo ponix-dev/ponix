@@ -34,7 +34,7 @@ func (mgr *SystemManager) CreateSystem(ctx context.Context, system *ponixv1.Syst
 		system.SetId(mgr.stringId())
 	}
 
-	system.Status = ponixv1.SystemStatus_SYSTEM_STATUS_PENDING
+	system.SetStatus(ponixv1.SystemStatus_SYSTEM_STATUS_PENDING)
 
 	err := mgr.validate(system)
 	if err != nil {
