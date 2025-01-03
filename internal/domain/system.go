@@ -14,13 +14,15 @@ type SystemStorer interface {
 
 type SystemManager struct {
 	stringId    StringId
+	validate    Validate
 	systemStore SystemStorer
 }
 
-func NewSystemManager(ss SystemStorer, sid StringId) *SystemManager {
+func NewSystemManager(ss SystemStorer, sid StringId, validate Validate) *SystemManager {
 	return &SystemManager{
 		systemStore: ss,
 		stringId:    sid,
+		validate:    validate,
 	}
 }
 
@@ -34,7 +36,12 @@ func (mgr *SystemManager) CreateSystem(ctx context.Context, system *ponixv1.Syst
 
 	system.Status = ponixv1.SystemStatus_SYSTEM_STATUS_PENDING
 
-	err := mgr.systemStore.CreateSystem(ctx, system)
+	err := mgr.validate(system)
+	if err != nil {
+		return "", err
+	}
+
+	err = mgr.systemStore.CreateSystem(ctx, system)
 	if err != nil {
 		return "", err
 	}

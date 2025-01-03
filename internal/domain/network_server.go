@@ -15,12 +15,14 @@ type NetworkServerStorer interface {
 type NetworkServerManager struct {
 	networkServerStore NetworkServerStorer
 	stringId           StringId
+	validate           Validate
 }
 
-func NewNetworkServerManager(nss NetworkServerStorer, stringId StringId) *NetworkServerManager {
+func NewNetworkServerManager(nss NetworkServerStorer, stringId StringId, validate Validate) *NetworkServerManager {
 	return &NetworkServerManager{
 		networkServerStore: nss,
 		stringId:           stringId,
+		validate:           validate,
 	}
 }
 
@@ -34,7 +36,12 @@ func (mgr *NetworkServerManager) CreateNetworkServer(ctx context.Context, networ
 
 	networkServer.Status = iotv1.NetworkServerStatus_NETWORK_SERVER_STATUS_PENDING
 
-	err := mgr.networkServerStore.CreateNetworkServer(ctx, networkServer)
+	err := mgr.validate(networkServer)
+	if err != nil {
+		return "", err
+	}
+
+	err = mgr.networkServerStore.CreateNetworkServer(ctx, networkServer)
 	if err != nil {
 		return "", err
 	}

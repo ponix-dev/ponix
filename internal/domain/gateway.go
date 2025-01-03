@@ -15,12 +15,14 @@ type GatewayStorer interface {
 type GatewayManager struct {
 	gatewayStore GatewayStorer
 	stringId     StringId
+	validate     Validate
 }
 
-func NewGatewayManager(gs GatewayStorer, stringId StringId) *GatewayManager {
+func NewGatewayManager(gs GatewayStorer, stringId StringId, validate Validate) *GatewayManager {
 	return &GatewayManager{
 		gatewayStore: gs,
 		stringId:     stringId,
+		validate:     validate,
 	}
 }
 
@@ -34,7 +36,12 @@ func (mgr *GatewayManager) CreateGateway(ctx context.Context, gateway *iotv1.Gat
 
 	gateway.Status = iotv1.GatewayStatus_GATEWAY_STATUS_PENDING
 
-	err := mgr.gatewayStore.CreateGateway(ctx, gateway)
+	err := mgr.validate(gateway)
+	if err != nil {
+		return "", err
+	}
+
+	err = mgr.gatewayStore.CreateGateway(ctx, gateway)
 	if err != nil {
 		return "", err
 	}

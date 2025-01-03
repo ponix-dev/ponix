@@ -15,12 +15,14 @@ type EndDeviceStorer interface {
 type EndDeviceManager struct {
 	endDeviceStore EndDeviceStorer
 	stringId       StringId
+	validate       Validate
 }
 
-func NewEndDeviceManager(eds EndDeviceStorer, stringId StringId) *EndDeviceManager {
+func NewEndDeviceManager(eds EndDeviceStorer, stringId StringId, validate Validate) *EndDeviceManager {
 	return &EndDeviceManager{
 		endDeviceStore: eds,
 		stringId:       stringId,
+		validate:       validate,
 	}
 }
 
@@ -34,7 +36,12 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, endDevice *iot
 
 	endDevice.Status = iotv1.EndDeviceStatus_END_DEVICE_STATUS_PENDING
 
-	err := mgr.endDeviceStore.CreateEndDevice(ctx, endDevice)
+	err := mgr.validate(endDevice)
+	if err != nil {
+		return "", err
+	}
+
+	err = mgr.endDeviceStore.CreateEndDevice(ctx, endDevice)
 	if err != nil {
 		return "", err
 	}

@@ -15,13 +15,15 @@ type SystemInputStorer interface {
 
 type SystemInputManager struct {
 	stringId         StringId
+	validate         Validate
 	systemInputStore SystemInputStorer
 }
 
-func NewSystemInputManager(ss SystemInputStorer, sid StringId) *SystemInputManager {
+func NewSystemInputManager(ss SystemInputStorer, sid StringId, validate Validate) *SystemInputManager {
 	return &SystemInputManager{
 		systemInputStore: ss,
 		stringId:         sid,
+		validate:         validate,
 	}
 }
 
@@ -35,7 +37,12 @@ func (mgr *SystemInputManager) CreateSystemInput(ctx context.Context, systemInpu
 
 	systemInput.Status = ponixv1.SystemInputStatus_SYSTEM_INPUT_STATUS_PENDING
 
-	err := mgr.systemInputStore.CreateSystemInput(ctx, systemInput)
+	err := mgr.validate(systemInput)
+	if err != nil {
+		return "", err
+	}
+
+	err = mgr.systemInputStore.CreateSystemInput(ctx, systemInput)
 	if err != nil {
 		return "", err
 	}
