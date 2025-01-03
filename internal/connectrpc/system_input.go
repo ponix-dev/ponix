@@ -3,22 +3,62 @@ package connectrpc
 import (
 	"context"
 
+	aquaponicsv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/aquaponics/v1"
 	ponixv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/ponix/v1"
+	soilponicsv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/soilponics/v1"
 	"connectrpc.com/connect"
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
-type SystemInputHandler struct{}
+type SystemInputManager interface {
+	CreateSystemInput(ctx context.Context, systemInput *ponixv1.SystemInput) (string, error)
+}
 
-func NewSystemInputHandler() *SystemInputHandler {
-	return &SystemInputHandler{}
+type SystemInputHandler struct {
+	systemInputManager SystemInputManager
+}
+
+func NewSystemInputHandler(simgr SystemInputManager) *SystemInputHandler {
+	return &SystemInputHandler{
+		systemInputManager: simgr,
+	}
 }
 
 func (handler *SystemInputHandler) CreateSystemInput(ctx context.Context, req *connect.Request[ponixv1.CreateSystemInputRequest]) (*connect.Response[ponixv1.CreateSystemInputResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateSystemInput")
 	defer span.End()
 
-	return nil, nil
+	si := &ponixv1.SystemInput{
+		Name: req.Msg.GetName(),
+	}
+
+	switch req.Msg.GetInputData().(type) {
+	case *ponixv1.CreateSystemInputRequest_Field:
+		si.InputData = &ponixv1.SystemInput_Field{
+			Field: &soilponicsv1.FieldData{},
+		}
+	case *ponixv1.CreateSystemInputRequest_GrowMedium:
+		si.InputData = &ponixv1.SystemInput_GrowMedium{
+			GrowMedium: &aquaponicsv1.GrowMediumData{
+				MediumType: req.Msg.GetGrowMedium().GetMediumType(),
+			},
+		}
+	case *ponixv1.CreateSystemInputRequest_Tank:
+		si.InputData = &ponixv1.SystemInput_Tank{
+			Tank: &aquaponicsv1.TankData{},
+		}
+	}
+
+	inputId, err := handler.systemInputManager.CreateSystemInput(ctx, si)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := connect.NewResponse(&ponixv1.CreateSystemInputResponse{
+		SystemInputId: inputId,
+	})
+
+	return resp, nil
 }
 
 func (handler *SystemInputHandler) SystemInput(ctx context.Context, req *connect.Request[ponixv1.SystemInputRequest]) (*connect.Response[ponixv1.SystemInputResponse], error) {

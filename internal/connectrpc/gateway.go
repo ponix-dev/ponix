@@ -8,17 +8,40 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
-type GatewayHandler struct{}
+type GatewayManager interface {
+	CreateGateway(ctx context.Context, gateway *iotv1.Gateway) (string, error)
+}
 
-func NewGatewayHandler() *GatewayHandler {
-	return &GatewayHandler{}
+type GatewayHandler struct {
+	gatewayManager GatewayManager
+}
+
+func NewGatewayHandler(gmgr GatewayManager) *GatewayHandler {
+	return &GatewayHandler{
+		gatewayManager: gmgr,
+	}
 }
 
 func (handler *GatewayHandler) CreateGateway(ctx context.Context, req *connect.Request[iotv1.CreateGatewayRequest]) (*connect.Response[iotv1.CreateGatewayResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateGateway")
 	defer span.End()
 
-	return nil, nil
+	gateway := &iotv1.Gateway{
+		SystemId:        req.Msg.SystemId,
+		NetworkServerId: req.Msg.NetworkServerId,
+		Name:            req.Msg.Name,
+	}
+
+	id, err := handler.gatewayManager.CreateGateway(ctx, gateway)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := connect.NewResponse(&iotv1.CreateGatewayResponse{
+		GatewayId: id,
+	})
+
+	return resp, nil
 }
 func (handler *GatewayHandler) Gateway(ctx context.Context, req *connect.Request[iotv1.GatewayRequest]) (*connect.Response[iotv1.GatewayResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "Gateway")

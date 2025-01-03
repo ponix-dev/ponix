@@ -11,9 +11,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/ponix-dev/ponix/internal/connectrpc"
+	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/mux"
 	"github.com/ponix-dev/ponix/internal/runner"
 	"github.com/ponix-dev/ponix/internal/telemetry"
+	"github.com/ponix-dev/ponix/internal/xid"
 )
 
 var (
@@ -46,23 +48,35 @@ func main() {
 
 	telemetry.SetServiceTracer(tracerProvider)
 
+	systemMgr := domain.NewSystemManager(nil, xid.StringId)
+	systemInputMgr := domain.NewSystemInputManager(nil, xid.StringId)
+	nsMgr := domain.NewNetworkServerManager(nil, xid.StringId)
+	gatewayMgr := domain.NewGatewayManager(nil, xid.StringId)
+	edMgr := domain.NewEndDeviceManager(nil, xid.StringId)
+
 	srv, err := mux.New(
 		mux.NewChiMux(chi.NewRouter()),
 		mux.WithLogger(logger),
 		mux.WithPort("3000"),
 
 		// System
-		mux.WithHandler(ponixv1connect.NewSystemServiceHandler(connectrpc.NewSystemHandler())),
-		mux.WithHandler(ponixv1connect.NewSystemInputServiceHandler(connectrpc.NewSystemInputHandler())),
+		mux.WithHandler(ponixv1connect.NewSystemServiceHandler(connectrpc.NewSystemHandler(
+			systemMgr,
+			nsMgr,
+			gatewayMgr,
+			edMgr,
+			systemInputMgr,
+		))),
+		mux.WithHandler(ponixv1connect.NewSystemInputServiceHandler(connectrpc.NewSystemInputHandler(systemInputMgr))),
 
 		// Organization
 		mux.WithHandler(organizationv1connect.NewOrganizationServiceHandler(connectrpc.NewOrganizationHandler())),
 		mux.WithHandler(organizationv1connect.NewUserServiceHandler(connectrpc.NewUserHandler())),
 
 		// IoT
-		mux.WithHandler(iotv1connect.NewNetworkServerServiceHandler(connectrpc.NewNetworkServerHandler())),
-		mux.WithHandler(iotv1connect.NewGatewayServiceHandler(connectrpc.NewGatewayHandler())),
-		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(connectrpc.NewEndDeviceHandler())),
+		mux.WithHandler(iotv1connect.NewNetworkServerServiceHandler(connectrpc.NewNetworkServerHandler(nsMgr))),
+		mux.WithHandler(iotv1connect.NewGatewayServiceHandler(connectrpc.NewGatewayHandler(gatewayMgr))),
+		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(connectrpc.NewEndDeviceHandler(edMgr))),
 	)
 	if err != nil {
 		logger.Error("could not create server", slog.Any("err", err))

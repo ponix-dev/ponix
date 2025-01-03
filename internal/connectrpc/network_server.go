@@ -8,17 +8,40 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
-type NetworkServerHandler struct{}
+type NetworkServerManager interface {
+	CreateNetworkServer(ctx context.Context, networkServer *iotv1.NetworkServer) (string, error)
+}
 
-func NewNetworkServerHandler() *NetworkServerHandler {
-	return &NetworkServerHandler{}
+type NetworkServerHandler struct {
+	networkServerManager NetworkServerManager
+}
+
+func NewNetworkServerHandler(nsmgr NetworkServerManager) *NetworkServerHandler {
+	return &NetworkServerHandler{
+		networkServerManager: nsmgr,
+	}
 }
 
 func (handler *NetworkServerHandler) CreateNetworkServer(ctx context.Context, req *connect.Request[iotv1.CreateNetworkServerRequest]) (*connect.Response[iotv1.CreateNetworkServerResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateNetworkServer")
 	defer span.End()
 
-	return nil, nil
+	ns := &iotv1.NetworkServer{
+		SystemId:    req.Msg.SystemId,
+		Name:        req.Msg.Name,
+		IotPlatform: req.Msg.IotPlatform,
+	}
+
+	id, err := handler.networkServerManager.CreateNetworkServer(ctx, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := connect.NewResponse(&iotv1.CreateNetworkServerResponse{
+		NetworkServerId: id,
+	})
+
+	return resp, nil
 }
 
 func (handler *NetworkServerHandler) NetworkServer(ctx context.Context, req *connect.Request[iotv1.NetworkServerRequest]) (*connect.Response[iotv1.NetworkServerResponse], error) {
