@@ -23,24 +23,21 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    grow_mediums (id CHAR(20) PRIMARY KEY, medium_type integer);
-
-CREATE TABLE
-    tanks (id CHAR(20) PRIMARY KEY);
-
-CREATE TABLE
-    fields (id CHAR(20) PRIMARY KEY);
-
-CREATE TABLE
     system_inputs (
         id CHAR(20) PRIMARY KEY,
         system_id CHAR(20) NOT NULL REFERENCES systems (id),
         name text NOT NULL,
-        status integer NOT NULL,
-        grow_medium_id CHAR(20) REFERENCES grow_mediums (id),
-        tank_id CHAR(20) REFERENCES tanks (id),
-        field_id CHAR(20) REFERENCES fields (id)
+        status integer NOT NULL
     );
+
+CREATE TABLE
+    grow_mediums (id CHAR(20) PRIMARY KEY REFERENCES system_inputs (id), medium_type integer NOT NULL);
+
+CREATE TABLE
+    tanks (id CHAR(20) PRIMARY KEY REFERENCES system_inputs (id));
+
+CREATE TABLE
+    fields (id CHAR(20) PRIMARY KEY REFERENCES system_inputs (id));
 
 CREATE TABLE
     network_servers (

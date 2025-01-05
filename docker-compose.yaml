@@ -3,12 +3,19 @@ services:
   management-service:
     image: management-service:latest
     ports:
-      - 3000:3000
+      - 3001:3001
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318
-      - ENVIRONMENT=local
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+      PORT: "3001"
+      DATABASE_PASSWORD: ponix
+      DATABASE_USERNAME: ponix
+      DATABASE_URL: db:5432
+      DATABASE: ponix
     depends_on:
       - otel-lgtm
+      - db
+    networks:
+      - ponix
   otel-lgtm:
     image: grafana/otel-lgtm
     ports:
@@ -38,7 +45,16 @@ services:
       - ponix
     depends_on:
       - nats
-
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: ponix
+      POSTGRES_USER: ponix
+      POSTGRES_DB: ponix
+    networks:
+      - ponix
 networks:
   ponix:
     name: ponix

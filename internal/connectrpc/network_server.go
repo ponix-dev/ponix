@@ -26,20 +26,20 @@ func (handler *NetworkServerHandler) CreateNetworkServer(ctx context.Context, re
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateNetworkServer")
 	defer span.End()
 
-	ns := &iotv1.NetworkServer{
+	ns := &iotv1.NetworkServer_builder{
 		SystemId:    req.Msg.GetSystemId(),
 		Name:        req.Msg.GetName(),
 		IotPlatform: req.Msg.GetIotPlatform(),
 	}
 
-	id, err := handler.networkServerManager.CreateNetworkServer(ctx, ns)
+	id, err := handler.networkServerManager.CreateNetworkServer(ctx, ns.Build())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&iotv1.CreateNetworkServerResponse{
+	resp := connect.NewResponse(iotv1.CreateNetworkServerResponse_builder{
 		NetworkServerId: id,
-	})
+	}.Build())
 
 	return resp, nil
 }

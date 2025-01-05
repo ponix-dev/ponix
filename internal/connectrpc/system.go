@@ -52,19 +52,19 @@ func (handler *SystemHandler) CreateSystem(ctx context.Context, req *connect.Req
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateSystem")
 	defer span.End()
 
-	system := &ponixv1.System{
+	system := ponixv1.System_builder{
 		OrganizationId: req.Msg.GetOrganizationId(),
 		Name:           req.Msg.GetName(),
 	}
 
-	id, err := handler.systemManager.CreateSystem(ctx, system)
+	id, err := handler.systemManager.CreateSystem(ctx, system.Build())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&ponixv1.CreateSystemResponse{
+	resp := connect.NewResponse(ponixv1.CreateSystemResponse_builder{
 		SystemId: id,
-	})
+	}.Build())
 
 	return resp, nil
 }
@@ -73,14 +73,14 @@ func (handler *SystemHandler) System(ctx context.Context, req *connect.Request[p
 	ctx, span := telemetry.Tracer().Start(ctx, "System")
 	defer span.End()
 
-	system, err := handler.systemManager.System(ctx, req.Msg.SystemId)
+	system, err := handler.systemManager.System(ctx, req.Msg.GetSystemId())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&ponixv1.SystemResponse{
+	resp := connect.NewResponse(ponixv1.SystemResponse_builder{
 		System: system,
-	})
+	}.Build())
 
 	return resp, nil
 }
@@ -89,7 +89,7 @@ func (handler *SystemHandler) SystemNetworkServers(ctx context.Context, req *con
 	ctx, span := telemetry.Tracer().Start(ctx, "SystemNetworkServers")
 	defer span.End()
 
-	servers, err := handler.nsManager.SystemNetworkServers(ctx, req.Msg.SystemId)
+	servers, err := handler.nsManager.SystemNetworkServers(ctx, req.Msg.GetSystemId())
 	if err != nil {
 		return nil, err
 	}
@@ -105,14 +105,14 @@ func (handler *SystemHandler) SystemGateways(ctx context.Context, req *connect.R
 	ctx, span := telemetry.Tracer().Start(ctx, "SystemGateways")
 	defer span.End()
 
-	gateways, err := handler.gatewayManager.SystemGateways(ctx, req.Msg.SystemId)
+	gateways, err := handler.gatewayManager.SystemGateways(ctx, req.Msg.GetSystemId())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&ponixv1.SystemGatewaysResponse{
+	resp := connect.NewResponse(ponixv1.SystemGatewaysResponse_builder{
 		Gateways: gateways,
-	})
+	}.Build())
 
 	return resp, nil
 }
@@ -121,14 +121,14 @@ func (handler *SystemHandler) SystemEndDevices(ctx context.Context, req *connect
 	ctx, span := telemetry.Tracer().Start(ctx, "SystemEndDevices")
 	defer span.End()
 
-	endDevices, err := handler.edManager.SystemEndDevices(ctx, req.Msg.SystemId)
+	endDevices, err := handler.edManager.SystemEndDevices(ctx, req.Msg.GetSystemId())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&ponixv1.SystemEndDevicesResponse{
+	resp := connect.NewResponse(ponixv1.SystemEndDevicesResponse_builder{
 		EndDevices: endDevices,
-	})
+	}.Build())
 
 	return resp, nil
 }
@@ -137,14 +137,14 @@ func (handler *SystemHandler) SystemInputs(ctx context.Context, req *connect.Req
 	ctx, span := telemetry.Tracer().Start(ctx, "SystemInputs")
 	defer span.End()
 
-	inputs, err := handler.siManager.SystemInputs(ctx, req.Msg.SystemId)
+	inputs, err := handler.siManager.SystemInputs(ctx, req.Msg.GetSystemId())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&ponixv1.SystemInputsResponse{
+	resp := connect.NewResponse(ponixv1.SystemInputsResponse_builder{
 		Inputs: inputs,
-	})
+	}.Build())
 
 	return resp, nil
 }

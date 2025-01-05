@@ -42,6 +42,27 @@ func (q *Queries) CreateSystem(ctx context.Context, arg CreateSystemParams) (Sys
 	return i, err
 }
 
+const getSystem = `-- name: GetSystem :one
+SELECT
+    id, organization_id, name, status
+FROM
+    systems
+WHERE
+    id = $1 LIMIT 1
+`
+
+func (q *Queries) GetSystem(ctx context.Context, id string) (System, error) {
+	row := q.db.QueryRow(ctx, getSystem, id)
+	var i System
+	err := row.Scan(
+		&i.ID,
+		&i.OrganizationID,
+		&i.Name,
+		&i.Status,
+	)
+	return i, err
+}
+
 const getSystemEndDevices = `-- name: GetSystemEndDevices :many
 SELECT
     id, system_id, network_server_id, system_input_id, name, status
@@ -111,6 +132,50 @@ func (q *Queries) GetSystemGateways(ctx context.Context, systemID string) ([]Gat
 		return nil, err
 	}
 	return items, nil
+}
+
+const getSystemInput = `-- name: GetSystemInput :one
+SELECT
+    system_inputs.name,
+    system_inputs.id,
+    system_inputs.system_id,
+    system_inputs.status,
+    fields.id,
+    tanks.id,
+    grow_mediums.id, grow_mediums.medium_type
+FROM
+    system_inputs
+    JOIN grow_mediums ON system_inputs.grow_medium_id = grow_mediums.id
+    JOIN tanks ON system_inputs.tank_id = tanks.id
+    JOIN fields ON system_inputs.field_id = fields.id
+WHERE
+    system_inputs.id = $1 LIMIT 1
+`
+
+type GetSystemInputRow struct {
+	Name       string
+	ID         string
+	SystemID   string
+	Status     int32
+	Field      Field
+	Tank       Tank
+	GrowMedium GrowMedium
+}
+
+func (q *Queries) GetSystemInput(ctx context.Context, id string) (GetSystemInputRow, error) {
+	row := q.db.QueryRow(ctx, getSystemInput, id)
+	var i GetSystemInputRow
+	err := row.Scan(
+		&i.Name,
+		&i.ID,
+		&i.SystemID,
+		&i.Status,
+		&i.Field.ID,
+		&i.Tank.ID,
+		&i.GrowMedium.ID,
+		&i.GrowMedium.MediumType,
+	)
+	return i, err
 }
 
 const getSystemInputs = `-- name: GetSystemInputs :many

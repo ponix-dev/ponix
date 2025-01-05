@@ -5,4 +5,5 @@ type ManagementConfig struct {
 	DatabaseUrl      string `env:"DATABASE_URL"`
 	DatabasePassword string `env:"DATABASE_PASSWORD"`
 	DatabaseUsername string `env:"DATABASE_USERNAME"`
+	Database         string `env:"DATABASE"`
 }

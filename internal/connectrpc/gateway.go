@@ -26,20 +26,20 @@ func (handler *GatewayHandler) CreateGateway(ctx context.Context, req *connect.R
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateGateway")
 	defer span.End()
 
-	gateway := &iotv1.Gateway{
+	gateway := &iotv1.Gateway_builder{
 		SystemId:        req.Msg.GetSystemId(),
 		NetworkServerId: req.Msg.GetNetworkServerId(),
 		Name:            req.Msg.GetName(),
 	}
 
-	id, err := handler.gatewayManager.CreateGateway(ctx, gateway)
+	id, err := handler.gatewayManager.CreateGateway(ctx, gateway.Build())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&iotv1.CreateGatewayResponse{
+	resp := connect.NewResponse(iotv1.CreateGatewayResponse_builder{
 		GatewayId: id,
-	})
+	}.Build())
 
 	return resp, nil
 }

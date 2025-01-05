@@ -26,20 +26,20 @@ func (handler *EndDeviceHandler) CreateEndDevice(ctx context.Context, req *conne
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
 
-	endDevice := &iotv1.EndDevice{
+	endDevice := &iotv1.EndDevice_builder{
 		NetworkServerId: req.Msg.GetNetworkServerId(),
 		SystemId:        req.Msg.GetSystemId(),
 		Name:            req.Msg.GetName(),
 	}
 
-	id, err := handler.endDeviceManager.CreateEndDevice(ctx, endDevice)
+	id, err := handler.endDeviceManager.CreateEndDevice(ctx, endDevice.Build())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&iotv1.CreateEndDeviceResponse{
+	resp := connect.NewResponse(iotv1.CreateEndDeviceResponse_builder{
 		EndDeviceId: id,
-	})
+	}.Build())
 
 	return resp, nil
 }

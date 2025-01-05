@@ -17,6 +17,9 @@ RUN mise trust && mise install --yes && \
 
 COPY go.mod go.sum ./
 
+RUN eval "$(mise hook-env --shell=bash)" && \
+    go mod download && go mod verify
+
 COPY . .
 
 RUN eval "$(mise hook-env --shell=bash)" && \
@@ -32,10 +35,13 @@ ENV GROUP_NAME=ponix
 RUN apt-get update && apt-get upgrade -y && apt-get install -y ca-certificates
 
 COPY --from=builder /management-service /home/ponix/management-service
+COPY --from=builder /root/.local/share/mise/installs/atlas/latest/bin/atlas /home/ponix/atlas
 
 RUN useradd -ms /bin/bash ponix
 
 USER ponix
 WORKDIR /home/ponix
+
+ENV PATH="/home/ponix"
 
 ENTRYPOINT ["./management-service"]

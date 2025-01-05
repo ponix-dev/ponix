@@ -4,10 +4,6 @@
 
 package sqlc
 
-import (
-	"github.com/jackc/pgx/v5/pgtype"
-)
-
 type EndDevice struct {
 	ID              string
 	SystemID        string
@@ -31,7 +27,7 @@ type Gateway struct {
 
 type GrowMedium struct {
 	ID         string
-	MediumType pgtype.Int4
+	MediumType int32
 }
 
 type NetworkServer struct {
@@ -56,13 +52,10 @@ type System struct {
 }
 
 type SystemInput struct {
-	ID           string
-	SystemID     string
-	Name         string
-	Status       int32
-	GrowMediumID pgtype.Text
-	TankID       pgtype.Text
-	FieldID      pgtype.Text
+	ID       string
+	SystemID string
+	Name     string
+	Status   int32
 }
 
 type Tank struct {

@@ -1,24 +1,24 @@
 -- name: CreateGrowMediumSystemInput :one
 INSERT INTO
-    system_inputs (id, system_id, name, status, grow_medium_id)
+    system_inputs (id, system_id, name, status)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4)
 RETURNING
     *;
 
 -- name: CreateTankSystemInput :one
 INSERT INTO
-    system_inputs (id, system_id, name, status, tank_id)
+    system_inputs (id, system_id, name, status)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4)
 RETURNING
     *;
 
 -- name: CreateFieldSystemInput :one
 INSERT INTO
-    system_inputs (id, system_id, name, status, field_id)
+    system_inputs (id, system_id, name, status)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4)
 RETURNING
     *;
 

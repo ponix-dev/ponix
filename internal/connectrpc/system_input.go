@@ -28,30 +28,30 @@ func (handler *SystemInputHandler) CreateSystemInput(ctx context.Context, req *c
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateSystemInput")
 	defer span.End()
 
-	si := &ponixv1.SystemInput{
+	si := &ponixv1.SystemInput_builder{
 		Name:     req.Msg.GetName(),
 		SystemId: req.Msg.GetSystemId(),
 	}
 
 	switch req.Msg.GetInputData().(type) {
 	case *ponixv1.CreateSystemInputRequest_Field:
-		si.SetField(&soilponicsv1.FieldData{})
+		si.Field = &soilponicsv1.FieldData{}
 	case *ponixv1.CreateSystemInputRequest_GrowMedium:
-		si.SetGrowMedium(&aquaponicsv1.GrowMediumData{
+		si.GrowMedium = &aquaponicsv1.GrowMediumData{
 			MediumType: req.Msg.GetGrowMedium().GetMediumType(),
-		})
+		}
 	case *ponixv1.CreateSystemInputRequest_Tank:
-		si.SetTank(&aquaponicsv1.TankData{})
+		si.Tank = &aquaponicsv1.TankData{}
 	}
 
-	inputId, err := handler.systemInputManager.CreateSystemInput(ctx, si)
+	inputId, err := handler.systemInputManager.CreateSystemInput(ctx, si.Build())
 	if err != nil {
 		return nil, err
 	}
 
-	resp := connect.NewResponse(&ponixv1.CreateSystemInputResponse{
+	resp := connect.NewResponse(ponixv1.CreateSystemInputResponse_builder{
 		SystemInputId: inputId,
-	})
+	}.Build())
 
 	return resp, nil
 }

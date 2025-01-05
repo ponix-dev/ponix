@@ -60,7 +60,7 @@ func (DB) Gen() error {
 
 // generates a database migration with a given name
 func (DB) Migrate(migration string) error {
-	err := sh.Run("atlas", "migrate", "diff", migration, "--dir", "file://internal/postgres/atlas", "--to", "file://schema/schema.sql", "--dev-url", "docker://postgres?search_path=public")
+	err := sh.Run("atlas", "migrate", "diff", migration, "--dir", "file://internal/postgres/atlas", "--to", "file://schema/schema.sql", "--dev-url", "docker://postgres/15/dev?search_path=public")
 	if err != nil {
 		return err
 	}

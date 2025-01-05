@@ -16,6 +16,8 @@ import (
 	"github.com/ponix-dev/ponix/internal/connectrpc"
 	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/mux"
+	"github.com/ponix-dev/ponix/internal/postgres"
+	"github.com/ponix-dev/ponix/internal/postgres/sqlc"
 	"github.com/ponix-dev/ponix/internal/protobuf"
 	"github.com/ponix-dev/ponix/internal/runner"
 	"github.com/ponix-dev/ponix/internal/telemetry"
@@ -30,15 +32,21 @@ func main() {
 	logger := slog.Default()
 	ctx := context.Background()
 
-	cfg, err := conf.GetConfig[conf.ManagementConfig](ctx)
-	if err != nil {
-		logger.Error("could not get config", slog.Any("err", err))
-		os.Exit(1)
-	}
-
 	resource, err := telemetry.NewResource(serviceName)
 	if err != nil {
 		logger.Error("could not create resource", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	logger, err = telemetry.NewLogger(ctx, resource, serviceName)
+	if err != nil {
+		logger.Error("could not create logger", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	cfg, err := conf.GetConfig[conf.ManagementConfig](ctx)
+	if err != nil {
+		logger.Error("could not get config", slog.Any("err", err))
 		os.Exit(1)
 	}
 
@@ -58,11 +66,38 @@ func main() {
 
 	telemetry.SetServiceTracer(tracerProvider)
 
-	systemMgr := domain.NewSystemManager(nil, xid.StringId, protobuf.Validate)
-	systemInputMgr := domain.NewSystemInputManager(nil, xid.StringId, protobuf.Validate)
-	nsMgr := domain.NewNetworkServerManager(nil, xid.StringId, protobuf.Validate)
-	gatewayMgr := domain.NewGatewayManager(nil, xid.StringId, protobuf.Validate)
-	edMgr := domain.NewEndDeviceManager(nil, xid.StringId, protobuf.Validate)
+	curl := postgres.NewConnUrl(
+		postgres.WithDB(cfg.Database),
+		postgres.WithUrl(cfg.DatabaseUrl),
+		postgres.WithUser(cfg.DatabaseUsername),
+		postgres.WithPassword(cfg.DatabasePassword),
+	)
+
+	err = postgres.RunMigrations(ctx, curl)
+	if err != nil {
+		logger.Error("could not complete migrations", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	dbpool, err := postgres.NewPool(ctx, curl)
+	if err != nil {
+		logger.Error("could not create db pool", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	dbQueries := sqlc.New(dbpool)
+
+	systemStore := postgres.NewSystemStore(dbQueries)
+	systemInputStore := postgres.NewSystemInputStore(dbQueries)
+	nsStore := postgres.NewNetworkServerStore(dbQueries)
+	gatewayStore := postgres.NewGatewayStore(dbQueries)
+	edStore := postgres.NewEndDeviceStore(dbQueries)
+
+	systemMgr := domain.NewSystemManager(systemStore, xid.StringId, protobuf.Validate)
+	systemInputMgr := domain.NewSystemInputManager(systemInputStore, xid.StringId, protobuf.Validate)
+	nsMgr := domain.NewNetworkServerManager(nsStore, xid.StringId, protobuf.Validate)
+	gatewayMgr := domain.NewGatewayManager(gatewayStore, xid.StringId, protobuf.Validate)
+	edMgr := domain.NewEndDeviceManager(edStore, xid.StringId, protobuf.Validate)
 
 	protovalidateInterceptor, err := validate.NewInterceptor()
 	if err != nil {

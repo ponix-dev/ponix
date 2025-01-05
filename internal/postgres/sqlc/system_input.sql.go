@@ -7,8 +7,6 @@ package sqlc
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createField = `-- name: CreateField :one
@@ -28,11 +26,11 @@ func (q *Queries) CreateField(ctx context.Context, id string) (string, error) {
 
 const createFieldSystemInput = `-- name: CreateFieldSystemInput :one
 INSERT INTO
-    system_inputs (id, system_id, name, status, field_id)
+    system_inputs (id, system_id, name, status)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4)
 RETURNING
-    id, system_id, name, status, grow_medium_id, tank_id, field_id
+    id, system_id, name, status
 `
 
 type CreateFieldSystemInputParams struct {
@@ -40,7 +38,6 @@ type CreateFieldSystemInputParams struct {
 	SystemID string
 	Name     string
 	Status   int32
-	FieldID  pgtype.Text
 }
 
 func (q *Queries) CreateFieldSystemInput(ctx context.Context, arg CreateFieldSystemInputParams) (SystemInput, error) {
@@ -49,7 +46,6 @@ func (q *Queries) CreateFieldSystemInput(ctx context.Context, arg CreateFieldSys
 		arg.SystemID,
 		arg.Name,
 		arg.Status,
-		arg.FieldID,
 	)
 	var i SystemInput
 	err := row.Scan(
@@ -57,9 +53,6 @@ func (q *Queries) CreateFieldSystemInput(ctx context.Context, arg CreateFieldSys
 		&i.SystemID,
 		&i.Name,
 		&i.Status,
-		&i.GrowMediumID,
-		&i.TankID,
-		&i.FieldID,
 	)
 	return i, err
 }
@@ -75,7 +68,7 @@ RETURNING
 
 type CreateGrowMediumParams struct {
 	ID         string
-	MediumType pgtype.Int4
+	MediumType int32
 }
 
 func (q *Queries) CreateGrowMedium(ctx context.Context, arg CreateGrowMediumParams) (GrowMedium, error) {
@@ -87,19 +80,18 @@ func (q *Queries) CreateGrowMedium(ctx context.Context, arg CreateGrowMediumPara
 
 const createGrowMediumSystemInput = `-- name: CreateGrowMediumSystemInput :one
 INSERT INTO
-    system_inputs (id, system_id, name, status, grow_medium_id)
+    system_inputs (id, system_id, name, status)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4)
 RETURNING
-    id, system_id, name, status, grow_medium_id, tank_id, field_id
+    id, system_id, name, status
 `
 
 type CreateGrowMediumSystemInputParams struct {
-	ID           string
-	SystemID     string
-	Name         string
-	Status       int32
-	GrowMediumID pgtype.Text
+	ID       string
+	SystemID string
+	Name     string
+	Status   int32
 }
 
 func (q *Queries) CreateGrowMediumSystemInput(ctx context.Context, arg CreateGrowMediumSystemInputParams) (SystemInput, error) {
@@ -108,7 +100,6 @@ func (q *Queries) CreateGrowMediumSystemInput(ctx context.Context, arg CreateGro
 		arg.SystemID,
 		arg.Name,
 		arg.Status,
-		arg.GrowMediumID,
 	)
 	var i SystemInput
 	err := row.Scan(
@@ -116,9 +107,6 @@ func (q *Queries) CreateGrowMediumSystemInput(ctx context.Context, arg CreateGro
 		&i.SystemID,
 		&i.Name,
 		&i.Status,
-		&i.GrowMediumID,
-		&i.TankID,
-		&i.FieldID,
 	)
 	return i, err
 }
@@ -140,11 +128,11 @@ func (q *Queries) CreateTank(ctx context.Context, id string) (string, error) {
 
 const createTankSystemInput = `-- name: CreateTankSystemInput :one
 INSERT INTO
-    system_inputs (id, system_id, name, status, tank_id)
+    system_inputs (id, system_id, name, status)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4)
 RETURNING
-    id, system_id, name, status, grow_medium_id, tank_id, field_id
+    id, system_id, name, status
 `
 
 type CreateTankSystemInputParams struct {
@@ -152,7 +140,6 @@ type CreateTankSystemInputParams struct {
 	SystemID string
 	Name     string
 	Status   int32
-	TankID   pgtype.Text
 }
 
 func (q *Queries) CreateTankSystemInput(ctx context.Context, arg CreateTankSystemInputParams) (SystemInput, error) {
@@ -161,7 +148,6 @@ func (q *Queries) CreateTankSystemInput(ctx context.Context, arg CreateTankSyste
 		arg.SystemID,
 		arg.Name,
 		arg.Status,
-		arg.TankID,
 	)
 	var i SystemInput
 	err := row.Scan(
@@ -169,9 +155,6 @@ func (q *Queries) CreateTankSystemInput(ctx context.Context, arg CreateTankSyste
 		&i.SystemID,
 		&i.Name,
 		&i.Status,
-		&i.GrowMediumID,
-		&i.TankID,
-		&i.FieldID,
 	)
 	return i, err
 }
