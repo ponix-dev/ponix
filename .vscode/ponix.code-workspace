@@ -8,9 +8,6 @@
 		},
 		{
 			"path": "../../ponix-end-devices"
-		},
-		{
-			"path": "../../../../fetch/backend-ctf"
 		}
 	],
 	"settings": {
