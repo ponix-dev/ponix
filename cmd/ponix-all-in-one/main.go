@@ -44,6 +44,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	logger, err = telemetry.NewLogger(ctx, resource, serviceName)
+	if err != nil {
+		logger.Error("could not create logger", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	telemetry.SetLogger(logger)
+
 	meterProvider, err := telemetry.NewMeterProvider(ctx, resource)
 	if err != nil {
 		logger.Error("could not create meter provider", slog.Any("err", err))

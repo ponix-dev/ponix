@@ -44,6 +44,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	telemetry.SetLogger(logger)
+
 	cfg, err := conf.GetConfig[conf.ManagementConfig](ctx)
 	if err != nil {
 		logger.Error("could not get config", slog.Any("err", err))

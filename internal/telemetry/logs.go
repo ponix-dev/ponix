@@ -26,7 +26,13 @@ func NewLogger(ctx context.Context, resource *resource.Resource, handlerName str
 		otelHandler,
 	))
 
-	slog.SetDefault(logger)
-
 	return logger, nil
+}
+
+func SetLogger(logger *slog.Logger) {
+	slog.SetDefault(logger)
+}
+
+func Logger() *slog.Logger {
+	return slog.Default()
 }

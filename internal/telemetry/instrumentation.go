@@ -1,7 +1,7 @@
 package telemetry
 
 var (
-	instrumentationName = ""
+	instrumentationName = "github.com/ponix-dev/ponix"
 )
 
 func SetInstrumentationName(name string) {

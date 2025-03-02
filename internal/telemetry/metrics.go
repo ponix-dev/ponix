@@ -8,7 +8,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/noop"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -40,24 +39,13 @@ func MeterProviderCloser(mp *sdkmetric.MeterProvider) runner.RunnerFunc {
 	}
 }
 
-var meter metric.Meter
-var meterSet = false
-
 func SetServiceMeter(meterProvider metric.MeterProvider) {
-	if meter == nil {
-		meter = meterProvider.Meter(
-			instrumentationName,
-			metric.WithSchemaURL(semconv.SchemaURL),
-		)
-		meterSet = true
-		otel.SetMeterProvider(meterProvider)
-	}
+	otel.SetMeterProvider(meterProvider)
 }
 
 func Meter() metric.Meter {
-	if meterSet {
-		return meter
-	}
-
-	return noop.NewMeterProvider().Meter(instrumentationName)
+	return otel.GetMeterProvider().Meter(
+		instrumentationName,
+		metric.WithSchemaURL(semconv.SchemaURL),
+	)
 }

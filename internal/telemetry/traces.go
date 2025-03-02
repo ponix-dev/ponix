@@ -12,7 +12,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
-	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func NewPropagator() propagation.TextMapPropagator {
@@ -44,24 +43,13 @@ func TracerProviderCloser(tp *sdktrace.TracerProvider) runner.RunnerFunc {
 	}
 }
 
-var tracer trace.Tracer
-var tracerSet = false
-
 func SetServiceTracer(tracerProvider trace.TracerProvider) {
-	if tracer == nil {
-		tracer = tracerProvider.Tracer(
-			instrumentationName,
-			trace.WithSchemaURL(semconv.SchemaURL),
-		)
-		tracerSet = true
-		otel.SetTracerProvider(tracerProvider)
-	}
+	otel.SetTracerProvider(tracerProvider)
 }
 
 func Tracer() trace.Tracer {
-	if tracerSet {
-		return tracer
-	}
-
-	return noop.NewTracerProvider().Tracer(instrumentationName)
+	return otel.GetTracerProvider().Tracer(
+		instrumentationName,
+		trace.WithSchemaURL(semconv.SchemaURL),
+	)
 }

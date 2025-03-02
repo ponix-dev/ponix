@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"ariga.io/atlas-go-sdk/atlasexec"
+	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
 //go:embed atlas/*.sql
@@ -35,7 +36,7 @@ func RunMigrations(ctx context.Context, connUrl ConnUrl) error {
 		return err
 	}
 
-	slog.Default().Info("applying migrations...")
+	telemetry.Logger().Info("applying migrations...")
 
 	resp, err := client.MigrateApply(ctx, &atlasexec.MigrateApplyParams{
 		DirURL: migrationsPath(),
@@ -46,10 +47,10 @@ func RunMigrations(ctx context.Context, connUrl ConnUrl) error {
 	}
 
 	for _, applied := range resp.Applied {
-		slog.Default().Info("migration applied", slog.String("name", applied.Name), slog.Time("start", applied.Start), slog.Time("end", applied.End))
+		telemetry.Logger().Info("migration applied", slog.String("name", applied.Name), slog.Time("start", applied.Start), slog.Time("end", applied.End))
 	}
 
-	slog.Default().Info("migrations applied", slog.Int("count", len(resp.Applied)))
+	telemetry.Logger().Info("migrations applied", slog.Int("count", len(resp.Applied)))
 
 	return nil
 }
