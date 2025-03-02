@@ -6,3 +6,4 @@ tilt = "latest"
 
 [env]
 GOPROXY = ""
+_.file = '.env'
