@@ -20,7 +20,7 @@ func defaultLoggerShutdown(ctx context.Context) error {
 
 var loggerShutdown = defaultLoggerShutdown
 
-func NewLoggerCloser() runner.RunnerFunc {
+func LoggerProviderCloser() runner.RunnerFunc {
 	return func(ctx context.Context) func() error {
 		return func() error {
 			return loggerShutdown(ctx)
