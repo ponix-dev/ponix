@@ -145,6 +145,7 @@ func main() {
 		runner.WithCloser(mux.NewCloser(srv)),
 		runner.WithCloser(telemetry.MeterProviderCloser(meterProvider)),
 		runner.WithCloser(telemetry.TracerProviderCloser(tracerProvider)),
+		runner.WithCloser(telemetry.LoggerProviderCloser()),
 	)
 
 	r.Run()
