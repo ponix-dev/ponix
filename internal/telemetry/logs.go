@@ -14,6 +14,11 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
+func LogFatal(logger *slog.Logger, msg string, err error) {
+	logger.Error(msg, err)
+	os.Exit(1)
+}
+
 func defaultLoggerShutdown(ctx context.Context) error {
 	return nil
 }

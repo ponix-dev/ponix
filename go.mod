@@ -1,13 +1,11 @@
 module github.com/ponix-dev/ponix
 
-go 1.23.3
+go 1.24.0
 
 require (
 	ariga.io/atlas-go-sdk v0.6.5
 	buf.build/gen/go/ponix/ponix/connectrpc/go v1.17.0-20250105050053-e70b0103ce9f.1
 	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.1-20250105050053-e70b0103ce9f.1
-	buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2
-	buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1
 	connectrpc.com/connect v1.18.1
 	connectrpc.com/validate v0.1.0
 	github.com/brianvoe/gofakeit/v7 v7.1.2
@@ -15,6 +13,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/magefile/mage v1.15.0
+	github.com/ory/client-go v1.17.2
 	github.com/rs/xid v1.6.0
 	github.com/samber/slog-multi v1.3.3
 	github.com/sethvargo/go-envconfig v1.1.0
@@ -34,18 +33,12 @@ require (
 	go.opentelemetry.io/otel/trace v1.33.0
 	golang.org/x/net v0.33.0
 	golang.org/x/sync v0.10.0
-	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.2
-	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
 	ariga.io/atlas v0.29.1 // indirect
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.1-20241127180247-a33202765966.1 // indirect
-	buf.build/gen/go/envoyproxy/protoc-gen-validate/protocolbuffers/go v1.36.2-20221025150516-6607b10f00ed.1 // indirect
-	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.2-20230727201445-fed2dcdcfd69.1 // indirect
-	buf.build/gen/go/thethingsindustries/protoc-gen-go-flags/protocolbuffers/go v1.36.2-20230804123531-52b4cd8b1852.1 // indirect
-	buf.build/gen/go/thethingsindustries/protoc-gen-go-json/protocolbuffers/go v1.36.2-20230804103054-a58d3aa4ec3e.1 // indirect
 	cel.dev/expr v0.19.1 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
@@ -109,11 +102,12 @@ require (
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329 // indirect
 	golang.org/x/mod v0.22.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250102185135-69823020774d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250102185135-69823020774d // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	google.golang.org/grpc v1.69.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
