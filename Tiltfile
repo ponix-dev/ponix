@@ -1,8 +1,8 @@
 tilt_dir = os.getcwd()
 
-docker_build('management-service:latest',
+docker_build('ponix-all-in-one:latest',
 	context=tilt_dir,
-	dockerfile="./cmd/management-service/Dockerfile",
+	dockerfile="./ponix-all-in-one/Dockerfile",
     only=[
         "./cmd",
         "./internal",

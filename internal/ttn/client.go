@@ -9,7 +9,6 @@ import (
 	iotv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/iot/v1"
 	"buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go/ttn/lorawan/v3/lorawanv3grpc"
 	lorawanv3 "buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go/ttn/lorawan/v3"
-	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/telemetry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -170,81 +169,6 @@ func formatTTNCloudAddress(serverName string, region TTNRegion) string {
 
 func grpcConn(address string) (conn *grpc.ClientConn, err error) {
 	return grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-}
-
-func (ttnClient *TTNClient) CreateApplication(ctx context.Context, application domain.Application) error {
-	ctx, span := telemetry.Tracer().Start(ctx, "CreateApplication")
-	defer span.End()
-
-	ctx = setAuthorizationContext(ctx, ttnClient.ApiKey)
-
-	req := lorawanv3.CreateApplicationRequest_builder{
-		Application: &lorawanv3.Application{
-			Ids: &lorawanv3.ApplicationIdentifiers{
-				ApplicationId: application.Id,
-			},
-			Name:                     application.Name,
-			Description:              application.Description,
-			NetworkServerAddress:     ttnClient.NetworkServerAddress,
-			ApplicationServerAddress: ttnClient.ApplicationServerAddress,
-			JoinServerAddress:        ttnClient.JoinServerAddress,
-		},
-		Collaborator: apiCollaborator(ttnClient.ApiCollaborator),
-	}.Build()
-
-	_, err := ttnClient.appRegistryClient.Create(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ttnClient *TTNClient) ListApplications(ctx context.Context) ([]domain.Application, error) {
-	ctx, span := telemetry.Tracer().Start(ctx, "ListApplications")
-	defer span.End()
-
-	ctx = setAuthorizationContext(ctx, ttnClient.ApiKey)
-
-	req := &lorawanv3.ListApplicationsRequest{
-		Collaborator: apiCollaborator(ttnClient.ApiCollaborator),
-		FieldMask:    applicationFieldMask(),
-	}
-
-	resp, err := ttnClient.appRegistryClient.List(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	apiApps := resp.GetApplications()
-	fmt.Println(apiApps)
-	apps := make([]domain.Application, len(apiApps))
-	for i, apiApp := range apiApps {
-		app := domain.Application{
-			Id:                       apiApp.GetIds().GetApplicationId(),
-			Name:                     apiApp.GetName(),
-			Description:              apiApp.GetDescription(),
-			NetworkServerAddress:     apiApp.GetNetworkServerAddress(),
-			ApplicationServerAddress: apiApp.GetApplicationServerAddress(),
-			JoinServerAddress:        apiApp.GetJoinServerAddress(),
-		}
-
-		apps[i] = app
-	}
-
-	return apps, nil
-}
-
-func applicationFieldMask() *fieldmaskpb.FieldMask {
-	return &fieldmaskpb.FieldMask{
-		Paths: []string{
-			"description",
-			"name",
-			"network_server_address",
-			"join_server_address",
-			"application_server_address",
-		},
-	}
 }
 
 func (ttnClient *TTNClient) CreateGateway(ctx context.Context, gateway *iotv1.Gateway) error {
