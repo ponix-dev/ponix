@@ -7,7 +7,12 @@ import (
 const (
 	ApiKeyEnvVar          = "TTN_API_KEY"
 	ApiCollaboratorEnvVar = "TTN_API_COLLABORATOR"
+	TTNApplicationEnvVar  = "TTN_APPLICATION"
 )
+
+func TTNApplicationFromEnv() (string, error) {
+	return conf.FromEnv(TTNApplicationEnvVar)
+}
 
 func ApiKeyFromEnv() (string, error) {
 	return conf.FromEnv(ApiKeyEnvVar)

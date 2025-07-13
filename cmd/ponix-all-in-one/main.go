@@ -7,7 +7,6 @@ import (
 
 	"buf.build/gen/go/ponix/ponix/connectrpc/go/iot/v1/iotv1connect"
 	"buf.build/gen/go/ponix/ponix/connectrpc/go/organization/v1/organizationv1connect"
-	"buf.build/gen/go/ponix/ponix/connectrpc/go/ponix/v1/ponixv1connect"
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/ponix-dev/ponix/internal/protobuf"
 	"github.com/ponix-dev/ponix/internal/runner"
 	"github.com/ponix-dev/ponix/internal/telemetry"
+	"github.com/ponix-dev/ponix/internal/ttn"
 	"github.com/ponix-dev/ponix/internal/xid"
 )
 
@@ -83,17 +83,20 @@ func main() {
 
 	dbQueries := sqlc.New(dbpool)
 
-	systemStore := postgres.NewSystemStore(dbQueries)
-	systemInputStore := postgres.NewSystemInputStore(dbQueries)
-	nsStore := postgres.NewNetworkServerStore(dbQueries)
-	gatewayStore := postgres.NewGatewayStore(dbQueries)
-	edStore := postgres.NewEndDeviceStore(dbQueries)
+	edStore := postgres.NewEndDeviceStore(dbQueries, dbpool)
 
-	systemMgr := domain.NewSystemManager(systemStore, xid.StringId, protobuf.Validate)
-	systemInputMgr := domain.NewSystemInputManager(systemInputStore, xid.StringId, protobuf.Validate)
-	nsMgr := domain.NewNetworkServerManager(nsStore, xid.StringId, protobuf.Validate)
-	gatewayMgr := domain.NewGatewayManager(gatewayStore, xid.StringId, protobuf.Validate)
-	edMgr := domain.NewEndDeviceManager(edStore, xid.StringId, protobuf.Validate)
+	ttnClient, err := ttn.NewTTNClient(
+		ttn.WithRegion(ttn.TTNRegion(cfg.TTNRegion)),
+		ttn.WithServerName(cfg.TTNServerName),
+		ttn.WithCollaboratorApiKey(cfg.TTNApiKey, cfg.TTNApiCollaborator),
+	)
+	if err != nil {
+		logger.Error("could not create ttn client", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	edMgr := domain.NewEndDeviceManager(edStore, ttnClient, cfg.ApplicationId, xid.StringId, protobuf.Validate)
+	lorawanMgr := domain.NewLoRaWANManager(edStore, xid.StringId, protobuf.Validate)
 
 	protovalidateInterceptor, err := validate.NewInterceptor()
 	if err != nil {
@@ -106,27 +109,13 @@ func main() {
 		mux.WithLogger(logger),
 		mux.WithPort(cfg.Port),
 
-		// System
-		mux.WithHandler(ponixv1connect.NewSystemServiceHandler(
-			connectrpc.NewSystemHandler(
-				systemMgr,
-				nsMgr,
-				gatewayMgr,
-				edMgr,
-				systemInputMgr,
-			),
-			connect.WithInterceptors(protovalidateInterceptor),
-		)),
-		mux.WithHandler(ponixv1connect.NewSystemInputServiceHandler(connectrpc.NewSystemInputHandler(systemInputMgr), connect.WithInterceptors(protovalidateInterceptor))),
-
 		// Organization
 		mux.WithHandler(organizationv1connect.NewOrganizationServiceHandler(connectrpc.NewOrganizationHandler(), connect.WithInterceptors(protovalidateInterceptor))),
 		mux.WithHandler(organizationv1connect.NewUserServiceHandler(connectrpc.NewUserHandler(), connect.WithInterceptors(protovalidateInterceptor))),
 
 		// IoT
-		mux.WithHandler(iotv1connect.NewNetworkServerServiceHandler(connectrpc.NewNetworkServerHandler(nsMgr), connect.WithInterceptors(protovalidateInterceptor))),
-		mux.WithHandler(iotv1connect.NewGatewayServiceHandler(connectrpc.NewGatewayHandler(gatewayMgr), connect.WithInterceptors(protovalidateInterceptor))),
 		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(connectrpc.NewEndDeviceHandler(edMgr), connect.WithInterceptors(protovalidateInterceptor))),
+		mux.WithHandler(iotv1connect.NewLoRaWANServiceHandler(connectrpc.NewLoRaWANHandler(lorawanMgr), connect.WithInterceptors(protovalidateInterceptor))),
 	)
 	if err != nil {
 		logger.Error("could not create server", slog.Any("err", err))

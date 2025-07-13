@@ -27,17 +27,3 @@ func (handler *OrganizationHandler) Organization(ctx context.Context, req *conne
 
 	return nil, nil
 }
-
-func (handler *OrganizationHandler) OrganizationUsers(ctx context.Context, req *connect.Request[organizationv1.OrganizationUsersRequest]) (*connect.Response[organizationv1.OrganizationUsersResponse], error) {
-	ctx, span := telemetry.Tracer().Start(ctx, "OrganizationUsers")
-	defer span.End()
-
-	return nil, nil
-}
-
-func (handler *OrganizationHandler) OrganizationSystems(ctx context.Context, req *connect.Request[organizationv1.OrganizationSystemsRequest]) (*connect.Response[organizationv1.OrganizationSystemsResponse], error) {
-	ctx, span := telemetry.Tracer().Start(ctx, "OrganizationSystems")
-	defer span.End()
-
-	return nil, nil
-}

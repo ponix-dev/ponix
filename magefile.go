@@ -50,7 +50,7 @@ type DB mg.Namespace
 
 // generates database code
 func (DB) Gen() error {
-	err := sh.Run("docker", "run", "--rm", "-v", baseDir+":/src", "-w", "/src", "sqlc/sqlc", "generate")
+	err := sh.Run("sqlc", "generate")
 	if err != nil {
 		return err
 	}

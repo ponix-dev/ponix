@@ -2,11 +2,8 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries:
-      - "./schema/system.sql"
-      - "./schema/system_input.sql"
-      - "./schema/network_server.sql"
-      - "./schema/gateway.sql"
       - "./schema/end_device.sql"
+      - "./schema/lorawan.sql"
       - "./schema/organization.sql"
       - "./schema/user.sql"
     schema: "./schema/schema.sql"

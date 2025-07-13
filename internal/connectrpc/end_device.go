@@ -9,7 +9,7 @@ import (
 )
 
 type EndDeviceManager interface {
-	CreateEndDevice(ctx context.Context, endDevice *iotv1.EndDevice) (string, error)
+	CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organizationID string) (*iotv1.EndDevice, error)
 }
 
 type EndDeviceHandler struct {
@@ -26,19 +26,17 @@ func (handler *EndDeviceHandler) CreateEndDevice(ctx context.Context, req *conne
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
 
-	endDevice := &iotv1.EndDevice_builder{
-		NetworkServerId: req.Msg.GetNetworkServerId(),
-		SystemId:        req.Msg.GetSystemId(),
-		Name:            req.Msg.GetName(),
-	}
+	// TODO: Extract organization ID from authentication context or request headers
+	// For now, using a placeholder organization ID
+	organizationID := "org_placeholder_123"
 
-	id, err := handler.endDeviceManager.CreateEndDevice(ctx, endDevice.Build())
+	endDevice, err := handler.endDeviceManager.CreateEndDevice(ctx, req.Msg, organizationID)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := connect.NewResponse(iotv1.CreateEndDeviceResponse_builder{
-		EndDeviceId: id,
+		EndDevice: endDevice,
 	}.Build())
 
 	return resp, nil
@@ -49,4 +47,22 @@ func (handler *EndDeviceHandler) EndDevice(ctx context.Context, req *connect.Req
 	defer span.End()
 
 	return nil, nil
+}
+
+func (handler *EndDeviceHandler) OrganizationEndDevices(ctx context.Context, req *connect.Request[iotv1.OrganizationEndDevicesRequest]) (*connect.Response[iotv1.OrganizationEndDevicesResponse], error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "OrganizationEndDevices")
+	defer span.End()
+
+	resp := connect.NewResponse(iotv1.OrganizationEndDevicesResponse_builder{}.Build())
+
+	return resp, nil
+}
+
+func (handler *EndDeviceHandler) EndDeviceData(ctx context.Context, req *connect.Request[iotv1.EndDeviceDataRequest]) (*connect.Response[iotv1.EndDeviceDataResponse], error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "EndDeviceData")
+	defer span.End()
+
+	resp := connect.NewResponse(iotv1.EndDeviceDataResponse_builder{}.Build())
+
+	return resp, nil
 }
