@@ -71,7 +71,7 @@ type User struct {
 	OrganizationID string
 	FirstName      string
 	LastName       string
-	Status         int32
+	Email          string
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 }

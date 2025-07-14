@@ -13,7 +13,7 @@ CREATE TABLE
         organization_id CHAR(20) NOT NULL REFERENCES organizations (id),
         first_name text NOT NULL,
         last_name text NOT NULL,
-        status integer NOT NULL,
+        email text NOT NULL UNIQUE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );

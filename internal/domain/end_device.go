@@ -51,9 +51,13 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iot
 		return nil, err
 	}
 
-	err = mgr.endDeviceRegister.RegisterEndDevice(ctx, endDevice)
-	if err != nil {
-		return nil, err
+	// may want to split this in to function calls when there are more types
+	switch endDevice.GetHardwareType() {
+	case iotv1.EndDeviceHardwareType_END_DEVICE_HARDWARE_TYPE_LORAWAN:
+		err = mgr.endDeviceRegister.RegisterEndDevice(ctx, endDevice)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Store the device in the database

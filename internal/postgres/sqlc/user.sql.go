@@ -7,15 +7,17 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO
-    users (id, organization_id, first_name, last_name, status)
+    users (id, organization_id, first_name, last_name, email, created_at, updated_at)
 VALUES
-    ($1, $2, $3, $4, $5)
+    ($1, $2, $3, $4, $5, $6, $7)
 RETURNING
-    id, organization_id, first_name, last_name, status, created_at, updated_at
+    id, organization_id, first_name, last_name, email, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -23,7 +25,9 @@ type CreateUserParams struct {
 	OrganizationID string
 	FirstName      string
 	LastName       string
-	Status         int32
+	Email          string
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -32,7 +36,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.OrganizationID,
 		arg.FirstName,
 		arg.LastName,
-		arg.Status,
+		arg.Email,
+		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i User
 	err := row.Scan(
@@ -40,7 +46,31 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.OrganizationID,
 		&i.FirstName,
 		&i.LastName,
-		&i.Status,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUser = `-- name: GetUser :one
+SELECT
+    id, organization_id, first_name, last_name, email, created_at, updated_at
+FROM
+    users
+WHERE
+    id = $1
+`
+
+func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
+	row := q.db.QueryRow(ctx, getUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.OrganizationID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
