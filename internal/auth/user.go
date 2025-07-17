@@ -12,7 +12,7 @@ func (e *Enforcer) CanManageSelf(ctx context.Context, userId, action, targetUser
 	defer span.End()
 
 	// Self-access check
-	if userId == targetUserId && (action == "read" || action == "update") {
+	if userId == targetUserId {
 		return true, nil
 	}
 

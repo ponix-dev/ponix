@@ -127,6 +127,7 @@ func main() {
 	}
 
 	superAdminInterceptor := connectrpc.SuperAdminInterceptor(authEnforcer)
+	userAuthInterceptor := connectrpc.UserAuthInterceptor(authEnforcer)
 
 	srv, err := mux.New(
 		mux.NewChiMux(chi.NewRouter()),
@@ -145,6 +146,7 @@ func main() {
 			connectrpc.NewUserHandler(userManager),
 			connect.WithInterceptors(
 				superAdminInterceptor,
+				userAuthInterceptor,
 				protovalidateInterceptor,
 			),
 		)),

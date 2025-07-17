@@ -46,6 +46,10 @@ type CanManageUserser interface {
 	CanManageUsers(ctx context.Context, user string, action string, organization string) (bool, error)
 }
 
+type CanManageSelfer interface {
+	CanManageSelf(ctx context.Context, userId, action, targetUserId string) (bool, error)
+}
+
 // EndDeviceAuthInterceptor creates an interceptor for end device operations
 func EndDeviceAuthInterceptor(enforcer CanAccessEndDevicer) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
@@ -109,6 +113,57 @@ func OrganizationUserAuthInterceptor(enforcer CanManageUserser) connect.UnaryInt
 			if !allowed {
 				return nil, connect.NewError(connect.CodePermissionDenied,
 					stacktrace.NewStackTraceErrorf("user %s not authorized to %s users in organization %s", userId, action, organizationId))
+			}
+
+			return next(ctx, req)
+		}
+	}
+}
+
+// UserAuthInterceptor creates an interceptor for user operations
+func UserAuthInterceptor(enforcer CanManageSelfer) connect.UnaryInterceptorFunc {
+	return func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			// Super admins can do anything
+			if domain.IsSuperAdminFromContext(ctx) {
+				return next(ctx, req)
+			}
+
+			userId, ok := domain.GetUserFromContext(ctx)
+			if !ok {
+				return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("user not authenticated"))
+			}
+
+			// Determine the action based on the RPC method
+			action := getActionFromMethod(req.Spec().Procedure)
+
+			// CreateUser is super admin only
+			if action == "create" {
+				return nil, connect.NewError(connect.CodePermissionDenied,
+					fmt.Errorf("user creation is restricted to super admins only"))
+			}
+
+			// For update operations, check if user is updating themselves
+			if action == "update" {
+				// Extract the target user ID from the request
+				var targetUserId string
+				switch msg := req.Any().(type) {
+				case interface{ GetUserId() string }:
+					targetUserId = msg.GetUserId()
+				default:
+					return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("cannot extract user ID from request"))
+				}
+
+				// Check if user can manage themselves
+				allowed, err := enforcer.CanManageSelf(ctx, userId, action, targetUserId)
+				if err != nil {
+					return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("authorization check failed: %w", err))
+				}
+
+				if !allowed {
+					return nil, connect.NewError(connect.CodePermissionDenied,
+						stacktrace.NewStackTraceErrorf("user %s not authorized to %s user %s", userId, action, targetUserId))
+				}
 			}
 
 			return next(ctx, req)
