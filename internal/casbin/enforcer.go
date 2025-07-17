@@ -6,7 +6,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/jackc/pgx/v5/pgxpool"
-	pgxadapter "github.com/pckhoi/casbin-pgx-adapter"
+	pgxadapter "github.com/pckhoi/casbin-pgx-adapter/v3"
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
@@ -54,7 +54,7 @@ func initializeModel() model.Model {
 }
 
 // initializePolicies sets up the default role-based policies in code
-func (e *Enforcer) initializePolicies(ctx context.Context) error {
+func (e *Enforcer) initializePolicies(_ctx context.Context) error {
 	// Clear existing policies to start fresh
 	e.casbin.ClearPolicy()
 
