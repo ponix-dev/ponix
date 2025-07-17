@@ -105,3 +105,19 @@ func (uos *UserOrganizationStore) IsUserInOrganization(ctx context.Context, user
 
 	return isMember, nil
 }
+
+func (uos *UserOrganizationStore) UpdateUserRole(ctx context.Context, userId, organizationId, role string) error {
+	ctx, span := telemetry.Tracer().Start(ctx, "UpdateUserRole")
+	defer span.End()
+
+	err := uos.queries.UpdateUserRole(ctx, sqlc.UpdateUserRoleParams{
+		UserID:         userId,
+		OrganizationID: organizationId,
+		Role:           role,
+	})
+	if err != nil {
+		return stacktrace.NewStackTraceErrorf("failed to update user role: %w", err)
+	}
+
+	return nil
+}

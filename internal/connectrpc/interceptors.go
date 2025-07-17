@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ponix-dev/ponix/internal/domain"
+	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
 type SuperAdminer interface {
@@ -39,6 +40,10 @@ func SuperAdminInterceptor(enforcer SuperAdminer) connect.UnaryInterceptorFunc {
 
 type CanAccessEndDevicer interface {
 	CanAccessEndDevice(ctx context.Context, userId string, action string, organizationId string) (bool, error)
+}
+
+type CanManageUserser interface {
+	CanManageUsers(ctx context.Context, user string, action string, organization string) (bool, error)
 }
 
 // EndDeviceAuthInterceptor creates an interceptor for end device operations
@@ -76,6 +81,41 @@ func EndDeviceAuthInterceptor(enforcer CanAccessEndDevicer) connect.UnaryInterce
 	}
 }
 
+// OrganizationUserAuthInterceptor creates an interceptor for organization user operations
+func OrganizationUserAuthInterceptor(enforcer CanManageUserser) connect.UnaryInterceptorFunc {
+	return func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			if domain.IsSuperAdminFromContext(ctx) {
+				return next(ctx, req)
+			}
+
+			userId, ok := domain.GetUserFromContext(ctx)
+			if !ok {
+				return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("user not authenticated"))
+			}
+
+			organizationId := GetOrganizationFromRequest(req)
+			if organizationId == "" {
+				return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("organization required"))
+			}
+
+			action := getActionFromMethod(req.Spec().Procedure)
+
+			allowed, err := enforcer.CanManageUsers(ctx, userId, action, organizationId)
+			if err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("authorization check failed: %w", err))
+			}
+
+			if !allowed {
+				return nil, connect.NewError(connect.CodePermissionDenied,
+					stacktrace.NewStackTraceErrorf("user %s not authorized to %s users in organization %s", userId, action, organizationId))
+			}
+
+			return next(ctx, req)
+		}
+	}
+}
+
 // TODO: this isn't a good way to do this, but it works for now
 // getActionFromMethod maps RPC method names to authorization actions
 func getActionFromMethod(procedure string) string {
@@ -95,22 +135,20 @@ func getActionFromMethod(procedure string) string {
 	}
 }
 
-// GetOrganizationFromRequest extracts organization  from the request
-// This implementation would depend on your specific request structure
+// GetOrganizationFromRequest extracts organization ID from organization user requests
 func GetOrganizationFromRequest(req connect.AnyRequest) string {
-	// Example implementation - you would adapt this based on your actual request types
-	// This might come from:
-	// 1. Request message fields
-	// 2. Request headers
-	// 3. URL path parameters
-
-	// For demonstration, check if there's an org header
-	if org := req.Header().Get("X-Organization-"); org != "" {
+	// Check headers first
+	if org := req.Header().Get("X-Organization-ID"); org != "" {
 		return org
 	}
 
-	// You might also extract from the request message if it has an organization field
-	// This would require type assertions based on your specific protobuf messages
-
-	return ""
+	// Try to extract from the request message
+	// This requires type assertion based on the specific request types
+	switch msg := req.Any().(type) {
+	case interface{ GetOrganizationId() string }:
+		return msg.GetOrganizationId()
+	default:
+		// Could not extract organization ID from request
+		return ""
+	}
 }

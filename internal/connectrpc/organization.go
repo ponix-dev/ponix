@@ -11,6 +11,7 @@ import (
 type OrganizationManager interface {
 	CreateOrganization(ctx context.Context, createReq *organizationv1.CreateOrganizationRequest) (*organizationv1.Organization, error)
 	GetOrganization(ctx context.Context, organizationReq *organizationv1.GetOrganizationRequest) (*organizationv1.Organization, error)
+	GetUserOrganizations(ctx context.Context, userId string) ([]*organizationv1.Organization, error)
 }
 
 type OrganizationHandler struct {
@@ -53,6 +54,22 @@ func (handler *OrganizationHandler) GetOrganization(ctx context.Context, req *co
 
 	response := &organizationv1.GetOrganizationResponse{
 		Organization: organization,
+	}
+
+	return connect.NewResponse(response), nil
+}
+
+func (handler *OrganizationHandler) GetUserOrganizations(ctx context.Context, req *connect.Request[organizationv1.GetUserOrganizationsRequest]) (*connect.Response[organizationv1.GetUserOrganizationsResponse], error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizations")
+	defer span.End()
+
+	organizations, err := handler.organizationManager.GetUserOrganizations(ctx, req.Msg.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+
+	response := &organizationv1.GetUserOrganizationsResponse{
+		Organizations: organizations,
 	}
 
 	return connect.NewResponse(response), nil

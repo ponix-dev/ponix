@@ -16,6 +16,7 @@ type DefaultAdminer interface {
 type OrganizationStorer interface {
 	CreateOrganization(ctx context.Context, organization *organizationv1.Organization) error
 	GetOrganization(ctx context.Context, organizationId string) (*organizationv1.Organization, error)
+	GetUserOrganizationsWithDetails(ctx context.Context, userId string) ([]*organizationv1.Organization, error)
 }
 
 type OrganizationManager struct {
@@ -83,4 +84,16 @@ func (mgr *OrganizationManager) GetOrganization(ctx context.Context, organizatio
 	}
 
 	return organization, nil
+}
+
+func (mgr *OrganizationManager) GetUserOrganizations(ctx context.Context, userId string) ([]*organizationv1.Organization, error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizations")
+	defer span.End()
+
+	organizations, err := mgr.organizationStore.GetUserOrganizationsWithDetails(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return organizations, nil
 }

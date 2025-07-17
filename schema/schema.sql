@@ -23,7 +23,8 @@ CREATE TABLE
         user_id CHAR(20) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         organization_id CHAR(20) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
         role VARCHAR(20) NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(user_id, organization_id)
     );
 
 -- Casbin policy table

@@ -61,3 +61,26 @@ func (store *OrganizationStore) GetOrganization(ctx context.Context, organizatio
 		UpdatedAt: timestamppb.New(org.UpdatedAt.Time),
 	}, nil
 }
+
+func (store *OrganizationStore) GetUserOrganizationsWithDetails(ctx context.Context, userId string) ([]*organizationv1.Organization, error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizationsWithDetails")
+	defer span.End()
+
+	orgs, err := store.db.GetUserOrganizationsWithDetails(ctx, userId)
+	if err != nil {
+		return nil, stacktrace.NewStackTraceError(err)
+	}
+
+	organizations := make([]*organizationv1.Organization, len(orgs))
+	for i, org := range orgs {
+		organizations[i] = &organizationv1.Organization{
+			Id:        org.ID,
+			Name:      org.Name,
+			Status:    organizationv1.OrganizationStatus(org.Status),
+			CreatedAt: timestamppb.New(org.CreatedAt.Time),
+			UpdatedAt: timestamppb.New(org.UpdatedAt.Time),
+		}
+	}
+
+	return organizations, nil
+}

@@ -10,10 +10,14 @@ buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.2-20230727
 buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.2-20230727201445-fed2dcdcfd69.1/go.mod h1:hTOBKINwGHfMDBYzf2rUhU43p7h+ySnNrgEDmT+iOQY=
 buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717012922-548551f4b54f.1 h1:N5dKRKHEkKRMo/5QPmLRVAfJUdpkmpYgpbQuD9WNxGs=
 buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717012922-548551f4b54f.1/go.mod h1:WH6d7QgI32+FxYrMu5nt6u02OEjGxosP0V/6NO+6scU=
+buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717020822-cf520a38608f.1 h1:TAyD87tctThDAJwOKZQybMvwwfNXy/yPvHH9qZ1bGb0=
+buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717020822-cf520a38608f.1/go.mod h1:KCQJGMEP5L4IcRcYelOiLxIzlGvv8qjw2Gs6C2VkN2k=
 buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250715132536-b14ad7d490e3.1 h1:PwZOP4p0YxklC4fEb/UmBbSPn7sxO6Lp/jk6JeAD63s=
 buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250715132536-b14ad7d490e3.1/go.mod h1:fzrXdSTczhkqRioK0u4g5nvTi2HAw48hi8g0/t4SHk4=
 buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717012922-548551f4b54f.1 h1:BL+7SLBCMKIMoAgq7du5CNppU4bMSDQhoZqdBhn6ZEA=
 buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717012922-548551f4b54f.1/go.mod h1:fzrXdSTczhkqRioK0u4g5nvTi2HAw48hi8g0/t4SHk4=
+buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717020822-cf520a38608f.1 h1:oUSt2HrqVP2m3VHmcKthiyQsPW/O1cHDEnAwhySSkzQ=
+buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717020822-cf520a38608f.1/go.mod h1:fzrXdSTczhkqRioK0u4g5nvTi2HAw48hi8g0/t4SHk4=
 buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2 h1:AEiBV+zpQyqMYdezKNk9B1YwJFyMx1OlxCydKLRli9w=
 buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2/go.mod h1:Itpx7XjD1qi8ffcbAKtfzxUfLJ9EXxD1uLLbfr0TZGs=
 buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1 h1:ODEHbQripVSkYEJrjZb/ZPfncoQBxHDsHT2eTmsTkDs=

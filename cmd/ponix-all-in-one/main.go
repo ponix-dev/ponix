@@ -148,6 +148,14 @@ func main() {
 				protovalidateInterceptor,
 			),
 		)),
+		mux.WithHandler(organizationv1connect.NewOrganizationUserServiceHandler(
+			connectrpc.NewOrganizationUserHandler(userOrgMgr),
+			connect.WithInterceptors(
+				superAdminInterceptor,
+				connectrpc.OrganizationUserAuthInterceptor(authEnforcer),
+				protovalidateInterceptor,
+			),
+		)),
 
 		// IoT
 		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(

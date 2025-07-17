@@ -12,6 +12,10 @@ import (
 const addUserToOrganization = `-- name: AddUserToOrganization :exec
 INSERT INTO user_organizations (user_id, organization_id, role)
 VALUES ($1, $2, $3)
+ON CONFLICT (user_id, organization_id)
+DO UPDATE SET 
+    role = EXCLUDED.role,
+    created_at = COALESCE(user_organizations.created_at, NOW())
 `
 
 type AddUserToOrganizationParams struct {
@@ -118,5 +122,24 @@ type RemoveUserFromOrganizationParams struct {
 
 func (q *Queries) RemoveUserFromOrganization(ctx context.Context, arg RemoveUserFromOrganizationParams) error {
 	_, err := q.db.Exec(ctx, removeUserFromOrganization, arg.UserID, arg.OrganizationID)
+	return err
+}
+
+const updateUserRole = `-- name: UpdateUserRole :exec
+INSERT INTO user_organizations (user_id, organization_id, role)
+VALUES ($1, $2, $3)
+ON CONFLICT (user_id, organization_id)
+DO UPDATE SET 
+    role = EXCLUDED.role
+`
+
+type UpdateUserRoleParams struct {
+	UserID         string
+	OrganizationID string
+	Role           string
+}
+
+func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error {
+	_, err := q.db.Exec(ctx, updateUserRole, arg.UserID, arg.OrganizationID, arg.Role)
 	return err
 }

@@ -4,8 +4,8 @@ go 1.24
 
 require (
 	ariga.io/atlas-go-sdk v0.6.5
-	buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717012922-548551f4b54f.1
-	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717012922-548551f4b54f.1
+	buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717020822-cf520a38608f.1
+	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717020822-cf520a38608f.1
 	buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2
 	buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1
 	connectrpc.com/connect v1.18.1

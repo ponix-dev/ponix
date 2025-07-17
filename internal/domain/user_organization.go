@@ -18,10 +18,14 @@ const (
 
 type UserOrganizationStorer interface {
 	AddUserToOrganization(ctx context.Context, orgUser *organizationv1.OrganizationUser) error
+	UpdateUserRole(ctx context.Context, userId, organizationId, role string) error
+	RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error
 }
 
 type UserAuther interface {
 	AddUserToOrganization(ctx context.Context, orgUser *organizationv1.OrganizationUser) error
+	UpdateUserRole(ctx context.Context, userId, organizationId, role string) error
+	RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error
 }
 
 type UserOrganizationManager struct {
@@ -79,5 +83,39 @@ func (mgr *UserOrganizationManager) AddOrganizationUser(ctx context.Context, org
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (mgr *UserOrganizationManager) UpdateUserRole(ctx context.Context, userId, organizationId, role string) error {
+	ctx, span := telemetry.Tracer().Start(ctx, "UpdateUserRole")
+	defer span.End()
+
+	err := mgr.userOrgStore.UpdateUserRole(ctx, userId, organizationId, role)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.userAuther.UpdateUserRole(ctx, userId, organizationId, role)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (mgr *UserOrganizationManager) RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error {
+	ctx, span := telemetry.Tracer().Start(ctx, "RemoveUserFromOrganization")
+	defer span.End()
+
+	err := mgr.userOrgStore.RemoveUserFromOrganization(ctx, userId, organizationId)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.userAuther.RemoveUserFromOrganization(ctx, userId, organizationId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
