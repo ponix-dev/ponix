@@ -11,7 +11,7 @@ import (
 	"connectrpc.com/validate"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/ponix-dev/ponix/internal/auth"
+	"github.com/ponix-dev/ponix/internal/casbin"
 	"github.com/ponix-dev/ponix/internal/conf"
 	"github.com/ponix-dev/ponix/internal/connectrpc"
 	"github.com/ponix-dev/ponix/internal/domain"
@@ -89,7 +89,7 @@ func main() {
 	userStore := postgres.NewUserStore(dbQueries, dbpool)
 	userOrgStore := postgres.NewUserOrganizationStore(dbQueries, dbpool)
 
-	authEnforcer, err := auth.NewEnforcer(ctx, dbpool)
+	authEnforcer, err := casbin.NewEnforcer(ctx, dbpool)
 	if err != nil {
 		logger.Error("could not create auth enforcer", slog.Any("err", err))
 		os.Exit(1)
