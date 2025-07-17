@@ -5,8 +5,6 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
-	"github.com/jackc/pgx/v5/pgxpool"
-	pgxadapter "github.com/pckhoi/casbin-pgx-adapter/v3"
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
@@ -15,15 +13,26 @@ type Enforcer struct {
 	casbin *casbin.Enforcer
 }
 
-// NewEnforcer creates a new Casbin enforcer with the organization model and pgx adapter
-func NewEnforcer(ctx context.Context, pool *pgxpool.Pool) (*Enforcer, error) {
-	m := initializeModel()
+type Adapter interface {
+	// LoadPolicy loads all policy rules from the storage.
+	LoadPolicy(model model.Model) error
+	// SavePolicy saves all policy rules to the storage.
+	SavePolicy(model model.Model) error
 
-	connStr := pool.Config().ConnString()
-	a, err := pgxadapter.NewAdapter(connStr, pgxadapter.WithTableName("casbin_rule"))
-	if err != nil {
-		return nil, stacktrace.NewStackTraceErrorf("failed to create pgx adapter: %w", err)
-	}
+	// AddPolicy adds a policy rule to the storage.
+	// This is part of the Auto-Save feature.
+	AddPolicy(sec string, ptype string, rule []string) error
+	// RemovePolicy removes a policy rule from the storage.
+	// This is part of the Auto-Save feature.
+	RemovePolicy(sec string, ptype string, rule []string) error
+	// RemoveFilteredPolicy removes policy rules that match the filter from the storage.
+	// This is part of the Auto-Save feature.
+	RemoveFilteredPolicy(sec string, ptype string, fieldIndex int, fieldValues ...string) error
+}
+
+// NewEnforcer creates a new Casbin enforcer with the organization model and pgx adapter
+func NewEnforcer(ctx context.Context, a Adapter) (*Enforcer, error) {
+	m := initializeModel()
 
 	e, err := casbin.NewEnforcer(m, a)
 	if err != nil {

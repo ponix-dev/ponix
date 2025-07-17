@@ -89,7 +89,13 @@ func main() {
 	userStore := postgres.NewUserStore(dbQueries, dbpool)
 	userOrgStore := postgres.NewUserOrganizationStore(dbQueries, dbpool)
 
-	authEnforcer, err := casbin.NewEnforcer(ctx, dbpool)
+	pgxAdapter, err := postgres.NewCasbinAdapter(dbpool)
+	if err != nil {
+		logger.Error("could not create casbin adapter", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	authEnforcer, err := casbin.NewEnforcer(ctx, pgxAdapter)
 	if err != nil {
 		logger.Error("could not create auth enforcer", slog.Any("err", err))
 		os.Exit(1)
