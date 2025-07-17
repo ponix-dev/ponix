@@ -1,3 +1,5 @@
+-- Create "casbin_rule" table
+CREATE TABLE "casbin_rule" ("id" serial NOT NULL, "ptype" character varying(100) NULL, "v0" character varying(100) NULL, "v1" character varying(100) NULL, "v2" character varying(100) NULL, "v3" character varying(100) NULL, "v4" character varying(100) NULL, "v5" character varying(100) NULL, PRIMARY KEY ("id"));
 -- Create "organizations" table
 CREATE TABLE "organizations" ("id" character(20) NOT NULL, "name" text NOT NULL, "status" integer NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id"));
 -- Create "end_devices" table
@@ -21,4 +23,10 @@ CREATE INDEX "idx_lorawan_configs_device_eui" ON "lorawan_configs" ("device_eui"
 -- Create index "idx_lorawan_configs_hardware_type" to table: "lorawan_configs"
 CREATE INDEX "idx_lorawan_configs_hardware_type" ON "lorawan_configs" ("hardware_type_id");
 -- Create "users" table
-CREATE TABLE "users" ("id" character(20) NOT NULL, "organization_id" character(20) NOT NULL, "first_name" text NOT NULL, "last_name" text NOT NULL, "status" integer NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id"), CONSTRAINT "users_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION);
+CREATE TABLE "users" ("id" character(20) NOT NULL, "first_name" text NOT NULL, "last_name" text NOT NULL, "email" text NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), "updated_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id"), CONSTRAINT "users_email_key" UNIQUE ("email"));
+-- Create "user_organizations" table
+CREATE TABLE "user_organizations" ("id" serial NOT NULL, "user_id" character(20) NOT NULL, "organization_id" character(20) NOT NULL, "role" character varying(20) NOT NULL, "created_at" timestamptz NOT NULL DEFAULT now(), PRIMARY KEY ("id"), CONSTRAINT "user_organizations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations" ("id") ON UPDATE NO ACTION ON DELETE CASCADE, CONSTRAINT "user_organizations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE CASCADE);
+-- Create index "idx_user_organizations_org_id" to table: "user_organizations"
+CREATE INDEX "idx_user_organizations_org_id" ON "user_organizations" ("organization_id");
+-- Create index "idx_user_organizations_user_id" to table: "user_organizations"
+CREATE INDEX "idx_user_organizations_user_id" ON "user_organizations" ("user_id");

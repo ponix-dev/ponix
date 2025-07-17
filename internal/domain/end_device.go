@@ -13,8 +13,8 @@ type EndDeviceRegister interface {
 }
 
 type EndDeviceStorer interface {
-	AddEndDevice(ctx context.Context, endDevice *iotv1.EndDevice, organizationID string) error
-	GetLoRaWANHardwareType(ctx context.Context, hardwareTypeID string) (*iotv1.LoRaWANHardwareData, error)
+	AddEndDevice(ctx context.Context, endDevice *iotv1.EndDevice, organizationId string) error
+	GetLoRaWANHardwareType(ctx context.Context, hardwareTypeId string) (*iotv1.LoRaWANHardwareData, error)
 }
 
 type EndDeviceManager struct {
@@ -35,18 +35,18 @@ func NewEndDeviceManager(eds EndDeviceStorer, edr EndDeviceRegister, application
 	}
 }
 
-func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organizationID string) (*iotv1.EndDevice, error) {
+func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organizationId string) (*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
 
-	endDeviceID := mgr.stringId()
+	endDeviceId := mgr.stringId()
 
 	err := mgr.validate(createReq)
 	if err != nil {
 		return nil, err
 	}
 
-	endDevice, err := mgr.buildEndDeviceFromRequest(ctx, endDeviceID, createReq)
+	endDevice, err := mgr.buildEndDeviceFromRequest(ctx, endDeviceId, createReq)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iot
 	}
 
 	// Store the device in the database
-	err = mgr.endDeviceStore.AddEndDevice(ctx, endDevice, organizationID)
+	err = mgr.endDeviceStore.AddEndDevice(ctx, endDevice, organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -70,13 +70,13 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iot
 }
 
 // buildEndDeviceFromRequest constructs a complete EndDevice from CreateEndDeviceRequest
-func (mgr *EndDeviceManager) buildEndDeviceFromRequest(ctx context.Context, endDeviceID string, createReq *iotv1.CreateEndDeviceRequest) (*iotv1.EndDevice, error) {
+func (mgr *EndDeviceManager) buildEndDeviceFromRequest(ctx context.Context, endDeviceId string, createReq *iotv1.CreateEndDeviceRequest) (*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "buildEndDeviceFromRequest")
 	defer span.End()
 
 	// Create base EndDevice using builder pattern
 	endDeviceBuilder := iotv1.EndDevice_builder{
-		Id:           endDeviceID,
+		Id:           endDeviceId,
 		Name:         createReq.GetName(),
 		Description:  createReq.GetDescription(),
 		Status:       iotv1.EndDeviceStatus_END_DEVICE_STATUS_PENDING,
@@ -126,7 +126,7 @@ func (mgr *EndDeviceManager) buildLoRaWANConfig(ctx context.Context, createReq *
 }
 
 // Placeholder functions for generating LoRaWAN identifiers
-// TODO: Implement proper ID generation logic
+// TODO: Implement proper Id generation logic
 func generateDeviceEUI() string {
 	// Generate unique 64-bit device EUI (16 hex chars)
 	return "0123456789ABCDEF"

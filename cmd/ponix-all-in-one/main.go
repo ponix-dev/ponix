@@ -11,6 +11,7 @@ import (
 	"connectrpc.com/validate"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ponix-dev/ponix/internal/auth"
 	"github.com/ponix-dev/ponix/internal/conf"
 	"github.com/ponix-dev/ponix/internal/connectrpc"
 	"github.com/ponix-dev/ponix/internal/domain"
@@ -84,6 +85,15 @@ func main() {
 	dbQueries := sqlc.New(dbpool)
 
 	edStore := postgres.NewEndDeviceStore(dbQueries, dbpool)
+	orgStore := postgres.NewOrganizationStore(dbQueries, dbpool)
+	userStore := postgres.NewUserStore(dbQueries, dbpool)
+	userOrgStore := postgres.NewUserOrganizationStore(dbQueries, dbpool)
+
+	authEnforcer, err := auth.NewEnforcer(ctx, dbpool)
+	if err != nil {
+		logger.Error("could not create auth enforcer", slog.Any("err", err))
+		os.Exit(1)
+	}
 
 	ttnClient, err := ttn.NewTTNClient(
 		ttn.WithRegion(ttn.TTNRegion(cfg.TTNRegion)),
@@ -97,6 +107,18 @@ func main() {
 
 	edMgr := domain.NewEndDeviceManager(edStore, ttnClient, cfg.ApplicationId, xid.StringId, protobuf.Validate)
 	lorawanMgr := domain.NewLoRaWANManager(edStore, xid.StringId, protobuf.Validate)
+	userOrgMgr := domain.NewUserOrganizationManager(userOrgStore, authEnforcer, protobuf.Validate)
+	organizationManager := domain.NewOrganizationManager(
+		orgStore,
+		xid.StringId,
+		protobuf.Validate,
+		userOrgMgr,
+	)
+	userManager := domain.NewUserManager(
+		userStore,
+		xid.StringId,
+		protobuf.Validate,
+	)
 
 	protovalidateInterceptor, err := validate.NewInterceptor()
 	if err != nil {
@@ -104,18 +126,46 @@ func main() {
 		os.Exit(1)
 	}
 
+	superAdminInterceptor := connectrpc.SuperAdminInterceptor(authEnforcer)
+
 	srv, err := mux.New(
 		mux.NewChiMux(chi.NewRouter()),
 		mux.WithLogger(logger),
 		mux.WithPort(cfg.Port),
 
 		// Organization
-		mux.WithHandler(organizationv1connect.NewOrganizationServiceHandler(connectrpc.NewOrganizationHandler(), connect.WithInterceptors(protovalidateInterceptor))),
-		mux.WithHandler(organizationv1connect.NewUserServiceHandler(connectrpc.NewUserHandler(), connect.WithInterceptors(protovalidateInterceptor))),
+		mux.WithHandler(organizationv1connect.NewOrganizationServiceHandler(
+			connectrpc.NewOrganizationHandler(organizationManager),
+			connect.WithInterceptors(
+				superAdminInterceptor,
+				protovalidateInterceptor,
+			),
+		)),
+		mux.WithHandler(organizationv1connect.NewUserServiceHandler(
+			connectrpc.NewUserHandler(userManager),
+			connect.WithInterceptors(
+				superAdminInterceptor,
+				protovalidateInterceptor,
+			),
+		)),
 
 		// IoT
-		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(connectrpc.NewEndDeviceHandler(edMgr), connect.WithInterceptors(protovalidateInterceptor))),
-		mux.WithHandler(iotv1connect.NewLoRaWANServiceHandler(connectrpc.NewLoRaWANHandler(lorawanMgr), connect.WithInterceptors(protovalidateInterceptor))),
+		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(
+			connectrpc.NewEndDeviceHandler(edMgr),
+			connect.WithInterceptors(
+				superAdminInterceptor,
+				connectrpc.EndDeviceAuthInterceptor(authEnforcer),
+				protovalidateInterceptor,
+			),
+		)),
+
+		mux.WithHandler(iotv1connect.NewLoRaWANServiceHandler(
+			connectrpc.NewLoRaWANHandler(lorawanMgr),
+			connect.WithInterceptors(
+				superAdminInterceptor,
+				protovalidateInterceptor,
+			),
+		)),
 	)
 	if err != nil {
 		logger.Error("could not create server", slog.Any("err", err))

@@ -9,7 +9,7 @@ import (
 )
 
 type EndDeviceManager interface {
-	CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organizationID string) (*iotv1.EndDevice, error)
+	CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organization string) (*iotv1.EndDevice, error)
 }
 
 type EndDeviceHandler struct {
@@ -26,11 +26,11 @@ func (handler *EndDeviceHandler) CreateEndDevice(ctx context.Context, req *conne
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
 
-	// TODO: Extract organization ID from authentication context or request headers
-	// For now, using a placeholder organization ID
-	organizationID := "org_placeholder_123"
+	// TODO: Extract organization  from authentication context or request headers
+	// For now, using a placeholder organization
+	organization := "org_placeholder_123"
 
-	endDevice, err := handler.endDeviceManager.CreateEndDevice(ctx, req.Msg, organizationID)
+	endDevice, err := handler.endDeviceManager.CreateEndDevice(ctx, req.Msg, organization)
 	if err != nil {
 		return nil, err
 	}

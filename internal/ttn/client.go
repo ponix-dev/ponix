@@ -11,6 +11,7 @@ import (
 	"buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go/ttn/lorawan/v3/lorawanv3grpc"
 	lorawanv3 "buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go/ttn/lorawan/v3"
 	"github.com/ponix-dev/ponix/internal/telemetry"
+	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -20,7 +21,7 @@ import (
 type TTNRegion string
 
 type Application struct {
-	ID          string
+	Id          string
 	Name        string
 	Description string
 }
@@ -239,7 +240,7 @@ func (ttnClient *TTNClient) RegisterEndDevice(ctx context.Context, endDevice *io
 	// Extract LoRaWAN configuration from the end device
 	lorawanConfig := endDevice.GetLorawanConfig()
 	if lorawanConfig == nil {
-		return fmt.Errorf("LoRaWAN configuration is required for TTN registration")
+		return stacktrace.NewStackTraceErrorf("LoRaWAN configuration is required for TTN registration")
 	}
 
 	// Build TTN end device identifiers
@@ -303,13 +304,13 @@ func (ttnClient *TTNClient) RegisterEndDevice(ctx context.Context, endDevice *io
 
 	_, err := ttnClient.endDeviceRegistryClient.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("failed to register end device with TTN: %w", err)
+		return stacktrace.NewStackTraceErrorf("failed to register end device with TTN: %w", err)
 	}
 
 	return nil
 }
 
-func (ttnClient *TTNClient) ListEndDevices(ctx context.Context, applicationID string) ([]*iotv1.EndDevice, error) {
+func (ttnClient *TTNClient) ListEndDevices(ctx context.Context, applicationId string) ([]*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "ListEndDevices")
 	defer span.End()
 
@@ -317,7 +318,7 @@ func (ttnClient *TTNClient) ListEndDevices(ctx context.Context, applicationID st
 
 	req := lorawanv3.ListEndDevicesRequest_builder{
 		ApplicationIds: lorawanv3.ApplicationIdentifiers_builder{
-			ApplicationId: applicationID,
+			ApplicationId: applicationId,
 		}.Build(),
 		FieldMask: endDeviceFieldMask(),
 	}.Build()
@@ -365,7 +366,7 @@ func (ttnClient *TTNClient) ListApplications(ctx context.Context) ([]*Applicatio
 
 	for i, rApp := range respApps {
 		app := &Application{
-			ID:          rApp.GetIds().GetApplicationId(),
+			Id:          rApp.GetIds().GetApplicationId(),
 			Name:        rApp.GetName(),
 			Description: rApp.GetDescription(),
 		}

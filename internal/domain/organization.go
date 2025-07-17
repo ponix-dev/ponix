@@ -5,40 +5,50 @@ import (
 	"time"
 
 	organizationv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/organization/v1"
+	"github.com/ponix-dev/ponix/internal/telemetry"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type DefaultAdminer interface {
+	AddDefaultAdminUser(ctx context.Context, organizationId string) error
+}
+
 type OrganizationStorer interface {
 	CreateOrganization(ctx context.Context, organization *organizationv1.Organization) error
-	GetOrganization(ctx context.Context, organizationID string) (*organizationv1.Organization, error)
+	GetOrganization(ctx context.Context, organizationId string) (*organizationv1.Organization, error)
 }
 
 type OrganizationManager struct {
 	organizationStore OrganizationStorer
 	stringId          StringId
 	validate          Validate
+	defaultAdminer    DefaultAdminer
 }
 
-func NewOrganizationManager(os OrganizationStorer, stringId StringId, validate Validate) *OrganizationManager {
+func NewOrganizationManager(os OrganizationStorer, stringId StringId, validate Validate, defaultAdminer DefaultAdminer) *OrganizationManager {
 	return &OrganizationManager{
 		organizationStore: os,
 		stringId:          stringId,
 		validate:          validate,
+		defaultAdminer:    defaultAdminer,
 	}
 }
 
 func (mgr *OrganizationManager) CreateOrganization(ctx context.Context, createReq *organizationv1.CreateOrganizationRequest) (*organizationv1.Organization, error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "CreateOrganization")
+	defer span.End()
+
 	err := mgr.validate(createReq)
 	if err != nil {
 		return nil, err
 	}
 
-	organizationID := mgr.stringId()
+	organizationId := mgr.stringId()
 
 	now := timestamppb.New(time.Now().UTC())
 
 	organization := &organizationv1.Organization{
-		Id:        organizationID,
+		Id:        organizationId,
 		Name:      createReq.GetName(),
 		Status:    organizationv1.OrganizationStatus_ORGANIZATION_STATUS_ACTIVE,
 		CreatedAt: now,
@@ -50,10 +60,18 @@ func (mgr *OrganizationManager) CreateOrganization(ctx context.Context, createRe
 		return nil, err
 	}
 
+	err = mgr.defaultAdminer.AddDefaultAdminUser(ctx, organizationId)
+	if err != nil {
+		return nil, err
+	}
+
 	return organization, nil
 }
 
-func (mgr *OrganizationManager) GetOrganization(ctx context.Context, organizationReq *organizationv1.OrganizationRequest) (*organizationv1.OrganizationResponse, error) {
+func (mgr *OrganizationManager) GetOrganization(ctx context.Context, organizationReq *organizationv1.GetOrganizationRequest) (*organizationv1.Organization, error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetOrganization")
+	defer span.End()
+
 	err := mgr.validate(organizationReq)
 	if err != nil {
 		return nil, err
@@ -64,7 +82,5 @@ func (mgr *OrganizationManager) GetOrganization(ctx context.Context, organizatio
 		return nil, err
 	}
 
-	return &organizationv1.OrganizationResponse{
-		Organization: organization,
-	}, nil
+	return organization, nil
 }

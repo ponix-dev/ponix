@@ -13,10 +13,10 @@ const (
 	FreqPlanUS902_928 LoRaWANFrequencyPlan = "US_902_928"
 
 	// Asia-Pacific
-	FreqPlanAS923     LoRaWANFrequencyPlan = "AS_923"
-	FreqPlanAS923_2   LoRaWANFrequencyPlan = "AS_923_2"
-	FreqPlanAS923_3   LoRaWANFrequencyPlan = "AS_923_3"
-	FreqPlanAS923_4   LoRaWANFrequencyPlan = "AS_923_4"
+	FreqPlanAS923   LoRaWANFrequencyPlan = "AS_923"
+	FreqPlanAS923_2 LoRaWANFrequencyPlan = "AS_923_2"
+	FreqPlanAS923_3 LoRaWANFrequencyPlan = "AS_923_3"
+	FreqPlanAS923_4 LoRaWANFrequencyPlan = "AS_923_4"
 
 	// Australia
 	FreqPlanAU915_928 LoRaWANFrequencyPlan = "AU_915_928"
@@ -128,7 +128,7 @@ func GetDefaultFrequencyPlan(region string) LoRaWANFrequencyPlan {
 
 // FrequencyPlanInfo contains metadata about a frequency plan
 type FrequencyPlanInfo struct {
-	ID          LoRaWANFrequencyPlan
+	Id          LoRaWANFrequencyPlan
 	Name        string
 	Description string
 	Region      string
@@ -140,7 +140,7 @@ type FrequencyPlanInfo struct {
 func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 	return map[LoRaWANFrequencyPlan]FrequencyPlanInfo{
 		FreqPlanEU863_870: {
-			ID:          FreqPlanEU863_870,
+			Id:          FreqPlanEU863_870,
 			Name:        "EU 863-870 MHz",
 			Description: "European LoRaWAN frequency plan",
 			Region:      "EU",
@@ -148,7 +148,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanEU433: {
-			ID:          FreqPlanEU433,
+			Id:          FreqPlanEU433,
 			Name:        "EU 433 MHz",
 			Description: "European 433 MHz LoRaWAN frequency plan",
 			Region:      "EU",
@@ -156,7 +156,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125 kHz",
 		},
 		FreqPlanUS902_928: {
-			ID:          FreqPlanUS902_928,
+			Id:          FreqPlanUS902_928,
 			Name:        "US 902-928 MHz",
 			Description: "North America LoRaWAN frequency plan",
 			Region:      "US",
@@ -164,7 +164,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/500 kHz",
 		},
 		FreqPlanAS923: {
-			ID:          FreqPlanAS923,
+			Id:          FreqPlanAS923,
 			Name:        "AS 923 MHz",
 			Description: "Asia-Pacific LoRaWAN frequency plan",
 			Region:      "AS",
@@ -172,7 +172,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanAS923_2: {
-			ID:          FreqPlanAS923_2,
+			Id:          FreqPlanAS923_2,
 			Name:        "AS 923-2 MHz",
 			Description: "Asia-Pacific LoRaWAN frequency plan (variant 2)",
 			Region:      "AS",
@@ -180,7 +180,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanAS923_3: {
-			ID:          FreqPlanAS923_3,
+			Id:          FreqPlanAS923_3,
 			Name:        "AS 923-3 MHz",
 			Description: "Asia-Pacific LoRaWAN frequency plan (variant 3)",
 			Region:      "AS",
@@ -188,7 +188,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanAS923_4: {
-			ID:          FreqPlanAS923_4,
+			Id:          FreqPlanAS923_4,
 			Name:        "AS 923-4 MHz",
 			Description: "Asia-Pacific LoRaWAN frequency plan (variant 4)",
 			Region:      "AS",
@@ -196,7 +196,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanAU915_928: {
-			ID:          FreqPlanAU915_928,
+			Id:          FreqPlanAU915_928,
 			Name:        "AU 915-928 MHz",
 			Description: "Australia LoRaWAN frequency plan",
 			Region:      "AU",
@@ -204,7 +204,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/500 kHz",
 		},
 		FreqPlanCN470_510: {
-			ID:          FreqPlanCN470_510,
+			Id:          FreqPlanCN470_510,
 			Name:        "CN 470-510 MHz",
 			Description: "China LoRaWAN frequency plan",
 			Region:      "CN",
@@ -212,7 +212,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanCN779_787: {
-			ID:          FreqPlanCN779_787,
+			Id:          FreqPlanCN779_787,
 			Name:        "CN 779-787 MHz",
 			Description: "China 779-787 MHz LoRaWAN frequency plan",
 			Region:      "CN",
@@ -220,7 +220,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanIN865_867: {
-			ID:          FreqPlanIN865_867,
+			Id:          FreqPlanIN865_867,
 			Name:        "IN 865-867 MHz",
 			Description: "India LoRaWAN frequency plan",
 			Region:      "IN",
@@ -228,7 +228,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanKR920_923: {
-			ID:          FreqPlanKR920_923,
+			Id:          FreqPlanKR920_923,
 			Name:        "KR 920-923 MHz",
 			Description: "Korea LoRaWAN frequency plan",
 			Region:      "KR",
@@ -236,7 +236,7 @@ func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 			Bandwidth:   "125/250 kHz",
 		},
 		FreqPlanRU864_870: {
-			ID:          FreqPlanRU864_870,
+			Id:          FreqPlanRU864_870,
 			Name:        "RU 864-870 MHz",
 			Description: "Russia LoRaWAN frequency plan",
 			Region:      "RU",

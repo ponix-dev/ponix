@@ -10,7 +10,7 @@ import (
 
 type UserManager interface {
 	CreateUser(ctx context.Context, createReq *organizationv1.CreateUserRequest) (*organizationv1.User, error)
-	GetUser(ctx context.Context, userReq *organizationv1.UserRequest) (*organizationv1.User, error)
+	GetUser(ctx context.Context, userReq *organizationv1.GetUserRequest) (*organizationv1.User, error)
 }
 
 type UserHandler struct {
@@ -33,19 +33,18 @@ func (handler *UserHandler) CreateUser(ctx context.Context, req *connect.Request
 	}
 
 	response := &organizationv1.CreateUserResponse{
-		UserId:         user.GetId(),
-		FirstName:      user.GetFirstName(),
-		LastName:       user.GetLastName(),
-		Email:          user.GetEmail(),
-		OrganizationId: user.GetOrganizationId(),
-		CreatedAt:      user.GetCreatedAt(),
+		UserId:    user.GetId(),
+		FirstName: user.GetFirstName(),
+		LastName:  user.GetLastName(),
+		Email:     user.GetEmail(),
+		CreatedAt: user.GetCreatedAt(),
 	}
 
 	return connect.NewResponse(response), nil
 }
 
-func (handler *UserHandler) User(ctx context.Context, req *connect.Request[organizationv1.UserRequest]) (*connect.Response[organizationv1.UserResponse], error) {
-	ctx, span := telemetry.Tracer().Start(ctx, "User")
+func (handler *UserHandler) GetUser(ctx context.Context, req *connect.Request[organizationv1.GetUserRequest]) (*connect.Response[organizationv1.GetUserResponse], error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetUser")
 	defer span.End()
 
 	user, err := handler.userManager.GetUser(ctx, req.Msg)
@@ -53,7 +52,7 @@ func (handler *UserHandler) User(ctx context.Context, req *connect.Request[organ
 		return nil, err
 	}
 
-	response := &organizationv1.UserResponse{
+	response := &organizationv1.GetUserResponse{
 		User: user,
 	}
 

@@ -8,6 +8,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type CasbinRule struct {
+	ID    int32
+	Ptype pgtype.Text
+	V0    pgtype.Text
+	V1    pgtype.Text
+	V2    pgtype.Text
+	V3    pgtype.Text
+	V4    pgtype.Text
+	V5    pgtype.Text
+}
+
 type EndDevice struct {
 	ID             string
 	Name           string
@@ -67,11 +78,18 @@ type Organization struct {
 }
 
 type User struct {
-	ID             string
+	ID        string
+	FirstName string
+	LastName  string
+	Email     string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type UserOrganization struct {
+	ID             int32
+	UserID         string
 	OrganizationID string
-	FirstName      string
-	LastName       string
-	Email          string
+	Role           string
 	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
 }

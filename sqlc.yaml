@@ -6,6 +6,7 @@ sql:
       - "./schema/lorawan.sql"
       - "./schema/organization.sql"
       - "./schema/user.sql"
+      - "./schema/user_organizations.sql"
     schema: "./schema/schema.sql"
     gen:
       go:

@@ -4,16 +4,18 @@ go 1.24
 
 require (
 	ariga.io/atlas-go-sdk v0.6.5
-	buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250713150400-a3fb5a2f9b52.1
-	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250713165706-3873923b11ab.1
+	buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717012922-548551f4b54f.1
+	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717012922-548551f4b54f.1
 	buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2
 	buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1
 	connectrpc.com/connect v1.18.1
 	connectrpc.com/validate v0.1.0
 	github.com/bufbuild/protovalidate-go v0.8.2
+	github.com/casbin/casbin/v2 v2.109.0
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/magefile/mage v1.15.0
+	github.com/pckhoi/casbin-pgx-adapter v1.0.1
 	github.com/rs/xid v1.6.0
 	github.com/samber/slog-multi v1.3.3
 	github.com/sethvargo/go-envconfig v1.1.0
@@ -47,6 +49,8 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
+	github.com/casbin/govaluate v1.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -57,10 +61,18 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.25.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
+	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
+	github.com/jackc/pgconn v1.10.0 // indirect
+	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgproto3/v2 v2.1.1 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgtype v1.8.1 // indirect
+	github.com/jackc/pgx/v4 v4.13.0 // indirect
+	github.com/jackc/puddle v1.1.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/mmcloughlin/meow v0.0.0-20200201185800-3501c7c05d21 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.47.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

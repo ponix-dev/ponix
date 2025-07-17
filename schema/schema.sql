@@ -10,13 +10,33 @@ CREATE TABLE
 CREATE TABLE
     users (
         id CHAR(20) PRIMARY KEY,
-        organization_id CHAR(20) NOT NULL REFERENCES organizations (id),
         first_name text NOT NULL,
         last_name text NOT NULL,
         email text NOT NULL UNIQUE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+CREATE TABLE
+    user_organizations (
+        id SERIAL PRIMARY KEY,
+        user_id CHAR(20) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        organization_id CHAR(20) NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        role VARCHAR(20) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+-- Casbin policy table
+CREATE TABLE casbin_rule (
+    id SERIAL PRIMARY KEY,
+    ptype VARCHAR(100),
+    v0 VARCHAR(100),
+    v1 VARCHAR(100),
+    v2 VARCHAR(100),
+    v3 VARCHAR(100),
+    v4 VARCHAR(100),
+    v5 VARCHAR(100)
+);
 
 -- LoRaWAN hardware types for device classification (maps to LoRaWANHardwareData)
 CREATE TABLE lorawan_hardware_types (
@@ -99,6 +119,8 @@ CREATE INDEX idx_end_devices_hardware_type ON end_devices(hardware_type);
 CREATE INDEX idx_lorawan_configs_device_eui ON lorawan_configs(device_eui);
 CREATE INDEX idx_lorawan_configs_app_id ON lorawan_configs(application_id);
 CREATE INDEX idx_lorawan_configs_hardware_type ON lorawan_configs(hardware_type_id);
+CREATE INDEX idx_user_organizations_user_id ON user_organizations(user_id);
+CREATE INDEX idx_user_organizations_org_id ON user_organizations(organization_id);
 
 -- Insert default frequency plans
 INSERT INTO lorawan_frequency_plans (id, name, description, region) VALUES

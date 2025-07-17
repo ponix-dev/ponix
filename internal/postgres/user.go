@@ -29,13 +29,12 @@ func (store *UserStore) CreateUser(ctx context.Context, user *organizationv1.Use
 	defer span.End()
 
 	params := sqlc.CreateUserParams{
-		ID:             user.GetId(),
-		OrganizationID: user.GetOrganizationId(),
-		FirstName:      user.GetFirstName(),
-		LastName:       user.GetLastName(),
-		Email:          user.GetEmail(),
-		CreatedAt:      pgtype.Timestamptz{Time: user.GetCreatedAt().AsTime(), Valid: true},
-		UpdatedAt:      pgtype.Timestamptz{Time: user.GetUpdatedAt().AsTime(), Valid: true},
+		ID:        user.GetId(),
+		FirstName: user.GetFirstName(),
+		LastName:  user.GetLastName(),
+		Email:     user.GetEmail(),
+		CreatedAt: pgtype.Timestamptz{Time: user.GetCreatedAt().AsTime(), Valid: true},
+		UpdatedAt: pgtype.Timestamptz{Time: user.GetUpdatedAt().AsTime(), Valid: true},
 	}
 
 	_, err := store.db.CreateUser(ctx, params)
@@ -56,12 +55,11 @@ func (store *UserStore) GetUser(ctx context.Context, userID string) (*organizati
 	}
 
 	return &organizationv1.User{
-		Id:             user.ID,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-		Email:          user.Email,
-		OrganizationId: user.OrganizationID,
-		CreatedAt:      timestamppb.New(user.CreatedAt.Time),
-		UpdatedAt:      timestamppb.New(user.UpdatedAt.Time),
+		Id:        user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		CreatedAt: timestamppb.New(user.CreatedAt.Time),
+		UpdatedAt: timestamppb.New(user.UpdatedAt.Time),
 	}, nil
 }

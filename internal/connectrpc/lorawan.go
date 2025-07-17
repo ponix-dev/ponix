@@ -10,10 +10,10 @@ import (
 
 type LoRaWANHardwareTypeManager interface {
 	CreateLoRaWANHardwareType(ctx context.Context, createReq *iotv1.CreateLoRaWANHardwareTypeRequest) (*iotv1.LoRaWANHardwareData, error)
-	GetLoRaWANHardwareType(ctx context.Context, hardwareTypeID string) (*iotv1.LoRaWANHardwareData, error)
+	GetLoRaWANHardwareType(ctx context.Context, hardwareType string) (*iotv1.LoRaWANHardwareData, error)
 	ListLoRaWANHardwareTypes(ctx context.Context) ([]*iotv1.LoRaWANHardwareData, error)
 	UpdateLoRaWANHardwareType(ctx context.Context, updateReq *iotv1.UpdateLoRaWANHardwareTypeRequest) (*iotv1.LoRaWANHardwareData, error)
-	DeleteLoRaWANHardwareType(ctx context.Context, hardwareTypeID string) error
+	DeleteLoRaWANHardwareType(ctx context.Context, hardwareType string) error
 }
 
 type LoRaWANHandler struct {

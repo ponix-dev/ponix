@@ -51,5 +51,28 @@ This is a Go-based monorepo for ponix software using gRPC/Connect-RPC for commun
 ## Testing
 Run tests with: `go test ./...`
 
+## Authorization Pattern for RPC Services
+
+### Service Structure
+- Inject `*auth.Enforcer` into service constructors
+- Create authorization helper: `authorizeRequest(ctx, action, orgID)`
+
+### RPC Method Pattern
+1. Extract `organizationID` from request
+2. Call `authorizeRequest(ctx, action, orgID)` before business logic
+3. Return `connect.CodePermissionDenied` if unauthorized
+
+### Action Mapping
+- `Create*` → `"create"`
+- `Get*`, `List*` → `"read"`
+- `Update*` → `"update"`
+- `Delete*` → `"delete"`
+
+### Context Requirements
+- Extract `userID` from JWT/session in request context
+- Use `enforcer.CanAccessEndDevice(ctx, userID, action, organizationID)`
+
 ## Code Quality
 Always run `go fmt` and `go vet` before committing changes.
+
+Never `if user if var1, err := SomeFunc(); err != nil {}` always do `if err != nil {}` after calling the function if it returns an error

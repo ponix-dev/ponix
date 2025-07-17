@@ -13,27 +13,25 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO
-    users (id, organization_id, first_name, last_name, email, created_at, updated_at)
+    users (id, first_name, last_name, email, created_at, updated_at)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7)
+    ($1, $2, $3, $4, $5, $6)
 RETURNING
-    id, organization_id, first_name, last_name, email, created_at, updated_at
+    id, first_name, last_name, email, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	ID             string
-	OrganizationID string
-	FirstName      string
-	LastName       string
-	Email          string
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
+	ID        string
+	FirstName string
+	LastName  string
+	Email     string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.ID,
-		arg.OrganizationID,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
@@ -43,7 +41,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.OrganizationID,
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,
@@ -55,7 +52,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const getUser = `-- name: GetUser :one
 SELECT
-    id, organization_id, first_name, last_name, email, created_at, updated_at
+    id, first_name, last_name, email, created_at, updated_at
 FROM
     users
 WHERE
@@ -67,7 +64,6 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.OrganizationID,
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,

@@ -10,7 +10,7 @@ import (
 
 type OrganizationManager interface {
 	CreateOrganization(ctx context.Context, createReq *organizationv1.CreateOrganizationRequest) (*organizationv1.Organization, error)
-	GetOrganization(ctx context.Context, organizationReq *organizationv1.OrganizationRequest) (*organizationv1.OrganizationResponse, error)
+	GetOrganization(ctx context.Context, organizationReq *organizationv1.GetOrganizationRequest) (*organizationv1.Organization, error)
 }
 
 type OrganizationHandler struct {
@@ -42,13 +42,17 @@ func (handler *OrganizationHandler) CreateOrganization(ctx context.Context, req 
 	return connect.NewResponse(response), nil
 }
 
-func (handler *OrganizationHandler) Organization(ctx context.Context, req *connect.Request[organizationv1.OrganizationRequest]) (*connect.Response[organizationv1.OrganizationResponse], error) {
-	ctx, span := telemetry.Tracer().Start(ctx, "Organization")
+func (handler *OrganizationHandler) GetOrganization(ctx context.Context, req *connect.Request[organizationv1.GetOrganizationRequest]) (*connect.Response[organizationv1.GetOrganizationResponse], error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetOrganization")
 	defer span.End()
 
-	response, err := handler.organizationManager.GetOrganization(ctx, req.Msg)
+	organization, err := handler.organizationManager.GetOrganization(ctx, req.Msg)
 	if err != nil {
 		return nil, err
+	}
+
+	response := &organizationv1.GetOrganizationResponse{
+		Organization: organization,
 	}
 
 	return connect.NewResponse(response), nil
