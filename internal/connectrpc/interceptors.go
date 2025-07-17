@@ -14,6 +14,19 @@ type SuperAdminer interface {
 	IsSuperAdmin(user string) (bool, error)
 }
 
+// AuthenticationInterceptor creates an authentication interceptor
+// For development, it sets a hardcoded user ID in the context for all requests
+// TODO: Replace with real JWT/session validation in production
+func AuthenticationInterceptor() connect.UnaryInterceptorFunc {
+	return func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			// Set hardcoded user ID in context for all requests (development only)
+			ctx = domain.SetUserContext(ctx, "dev-user-123")
+			return next(ctx, req)
+		}
+	}
+}
+
 func SuperAdminInterceptor(enforcer SuperAdminer) connect.UnaryInterceptorFunc {
 	return func(uf connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -50,8 +63,8 @@ type CanManageSelfer interface {
 	CanManageSelf(ctx context.Context, userId, action, targetUserId string) (bool, error)
 }
 
-// EndDeviceAuthInterceptor creates an interceptor for end device operations
-func EndDeviceAuthInterceptor(enforcer CanAccessEndDevicer) connect.UnaryInterceptorFunc {
+// EndDeviceAuthorizationInterceptor creates an interceptor for end device operations
+func EndDeviceAuthorizationInterceptor(enforcer CanAccessEndDevicer) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			if domain.IsSuperAdminFromContext(ctx) {
@@ -85,8 +98,8 @@ func EndDeviceAuthInterceptor(enforcer CanAccessEndDevicer) connect.UnaryInterce
 	}
 }
 
-// OrganizationUserAuthInterceptor creates an interceptor for organization user operations
-func OrganizationUserAuthInterceptor(enforcer CanManageUserser) connect.UnaryInterceptorFunc {
+// OrganizationUserAuthorizationInterceptor creates an interceptor for organization user operations
+func OrganizationUserAuthorizationInterceptor(enforcer CanManageUserser) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			if domain.IsSuperAdminFromContext(ctx) {
@@ -120,8 +133,8 @@ func OrganizationUserAuthInterceptor(enforcer CanManageUserser) connect.UnaryInt
 	}
 }
 
-// UserAuthInterceptor creates an interceptor for user operations
-func UserAuthInterceptor(enforcer CanManageSelfer) connect.UnaryInterceptorFunc {
+// UserAuthorizationInterceptor creates an interceptor for user operations
+func UserAuthorizationInterceptor(enforcer CanManageSelfer) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			// Super admins can do anything

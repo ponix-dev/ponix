@@ -126,8 +126,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	authenticationInterceptor := connectrpc.AuthenticationInterceptor()
 	superAdminInterceptor := connectrpc.SuperAdminInterceptor(authEnforcer)
-	userAuthInterceptor := connectrpc.UserAuthInterceptor(authEnforcer)
+	userAuthorizationInterceptor := connectrpc.UserAuthorizationInterceptor(authEnforcer)
 
 	srv, err := mux.New(
 		mux.NewChiMux(chi.NewRouter()),
@@ -138,6 +139,7 @@ func main() {
 		mux.WithHandler(organizationv1connect.NewOrganizationServiceHandler(
 			connectrpc.NewOrganizationHandler(organizationManager),
 			connect.WithInterceptors(
+				authenticationInterceptor,
 				superAdminInterceptor,
 				protovalidateInterceptor,
 			),
@@ -145,16 +147,18 @@ func main() {
 		mux.WithHandler(organizationv1connect.NewUserServiceHandler(
 			connectrpc.NewUserHandler(userManager),
 			connect.WithInterceptors(
+				authenticationInterceptor,
 				superAdminInterceptor,
-				userAuthInterceptor,
+				userAuthorizationInterceptor,
 				protovalidateInterceptor,
 			),
 		)),
 		mux.WithHandler(organizationv1connect.NewOrganizationUserServiceHandler(
 			connectrpc.NewOrganizationUserHandler(userOrgMgr),
 			connect.WithInterceptors(
+				authenticationInterceptor,
 				superAdminInterceptor,
-				connectrpc.OrganizationUserAuthInterceptor(authEnforcer),
+				connectrpc.OrganizationUserAuthorizationInterceptor(authEnforcer),
 				protovalidateInterceptor,
 			),
 		)),
@@ -163,8 +167,9 @@ func main() {
 		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(
 			connectrpc.NewEndDeviceHandler(edMgr),
 			connect.WithInterceptors(
+				authenticationInterceptor,
 				superAdminInterceptor,
-				connectrpc.EndDeviceAuthInterceptor(authEnforcer),
+				connectrpc.EndDeviceAuthorizationInterceptor(authEnforcer),
 				protovalidateInterceptor,
 			),
 		)),
@@ -172,6 +177,7 @@ func main() {
 		mux.WithHandler(iotv1connect.NewLoRaWANServiceHandler(
 			connectrpc.NewLoRaWANHandler(lorawanMgr),
 			connect.WithInterceptors(
+				authenticationInterceptor,
 				superAdminInterceptor,
 				protovalidateInterceptor,
 			),
