@@ -5,13 +5,26 @@ import (
 	"fmt"
 
 	organizationv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/organization/v1"
+	"github.com/casbin/casbin/v2"
 	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/telemetry"
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
+// OrganizationEnforcer handles organization-specific authorization
+type OrganizationEnforcer struct {
+	enforcer *casbin.Enforcer
+}
+
+// NewOrganizationEnforcer creates a new organization enforcer
+func NewOrganizationEnforcer(enforcer *casbin.Enforcer) *OrganizationEnforcer {
+	return &OrganizationEnforcer{
+		enforcer: enforcer,
+	}
+}
+
 // AddUserToOrganization assigns a user to a role within an organization (idempotent)
-func (e *Enforcer) AddUserToOrganization(ctx context.Context, orgUser *organizationv1.OrganizationUser) error {
+func (e *OrganizationEnforcer) AddUserToOrganization(ctx context.Context, orgUser *organizationv1.OrganizationUser) error {
 	_, span := telemetry.Tracer().Start(ctx, "addUserToOrganization")
 	defer span.End()
 
@@ -19,19 +32,19 @@ func (e *Enforcer) AddUserToOrganization(ctx context.Context, orgUser *organizat
 	orgRole := fmt.Sprintf("org_%s:%s", orgUser.Role, orgUser.OrganizationId)
 
 	// Remove any existing roles for this user in this organization first
-	existingRoles, err := e.casbin.GetRolesForUser(orgUser.UserId)
+	existingRoles, err := e.enforcer.GetRolesForUser(orgUser.UserId)
 	if err != nil {
 		return stacktrace.NewStackTraceErrorf("failed to get user roles: %w", err)
 	}
 
 	for _, role := range existingRoles {
 		if len(role) > len(orgUser.OrganizationId) && role[len(role)-len(orgUser.OrganizationId):] == orgUser.OrganizationId {
-			_, _ = e.casbin.DeleteRoleForUser(orgUser.UserId, role) // Ignore errors - might not exist
+			_, _ = e.enforcer.DeleteRoleForUser(orgUser.UserId, role) // Ignore errors - might not exist
 		}
 	}
 
 	// Assign user to organization-specific role (idempotent - Casbin handles duplicates)
-	_, err = e.casbin.AddRoleForUser(orgUser.UserId, orgRole)
+	_, err = e.enforcer.AddRoleForUser(orgUser.UserId, orgRole)
 	if err != nil {
 		return stacktrace.NewStackTraceErrorf("failed to add user to organization: %w", err)
 	}
@@ -42,18 +55,18 @@ func (e *Enforcer) AddUserToOrganization(ctx context.Context, orgUser *organizat
 		return stacktrace.NewStackTraceErrorf("failed to add organization policies: %w", err)
 	}
 
-	return e.casbin.SavePolicy()
+	return e.enforcer.SavePolicy()
 }
 
 // addOrgSpecificPolicies adds policies for a specific organization and role (idempotent)
-func (e *Enforcer) addOrgSpecificPolicies(role domain.OrganizationRole, organization string) error {
+func (e *OrganizationEnforcer) addOrgSpecificPolicies(role domain.OrganizationRole, organization string) error {
 	_, span := telemetry.Tracer().Start(context.Background(), "addOrgSpecificPolicies")
 	defer span.End()
 
 	orgRole := fmt.Sprintf("org_%s:%s", role, organization)
 
 	// Remove existing policies for this org role first to ensure clean state
-	e.casbin.RemoveFilteredPolicy(0, orgRole)
+	e.enforcer.RemoveFilteredPolicy(0, orgRole)
 
 	var policies [][]string
 	switch role {
@@ -68,17 +81,24 @@ func (e *Enforcer) addOrgSpecificPolicies(role domain.OrganizationRole, organiza
 			{orgRole, "user", "create", organization},
 			{orgRole, "user", "update", organization},
 			{orgRole, "user", "delete", organization},
+			{orgRole, "lorawan_hardware_type", "create", organization},
+			{orgRole, "lorawan_hardware_type", "read", organization},
+			{orgRole, "lorawan_hardware_type", "update", organization},
+			{orgRole, "lorawan_hardware_type", "delete", organization},
 		}
 	case domain.OrganizationRoleMember:
 		policies = [][]string{
 			{orgRole, "end_device", "read", organization},
 			{orgRole, "end_device", "update", organization},
 			{orgRole, "organization", "read", organization},
+			{orgRole, "lorawan_hardware_type", "read", organization},
+			{orgRole, "lorawan_hardware_type", "update", organization},
 		}
 	case domain.OrganizationRoleViewer:
 		policies = [][]string{
 			{orgRole, "end_device", "read", organization},
 			{orgRole, "organization", "read", organization},
+			{orgRole, "lorawan_hardware_type", "read", organization},
 		}
 	default:
 		return stacktrace.NewStackTraceErrorf("unknown role: %s", role)
@@ -86,28 +106,51 @@ func (e *Enforcer) addOrgSpecificPolicies(role domain.OrganizationRole, organiza
 
 	// Add all policies for this organization role (idempotent - duplicates are handled by Casbin)
 	for _, policy := range policies {
-		_, _ = e.casbin.AddPolicy(policy) // Ignore errors - might already exist
+		_, _ = e.enforcer.AddPolicy(policy) // Ignore errors - might already exist
 	}
 
 	return nil
 }
 
-// CanManageUsers checks if a user can manage other users within an organization
-func (e *Enforcer) CanManageUsers(ctx context.Context, user string, action string, organization string) (bool, error) {
-	_, span := telemetry.Tracer().Start(ctx, "CanManageUsers")
+// CanCreateUsers checks if a user can create other users within an organization
+func (e *OrganizationEnforcer) CanCreateUsers(ctx context.Context, user string, organization string) (bool, error) {
+	_, span := telemetry.Tracer().Start(ctx, "CanCreateUsers")
 	defer span.End()
 
-	// Format: subject, object, action, organization
-	return e.casbin.Enforce(user, "user", action, organization)
+	return e.enforcer.Enforce(user, "user", "create", organization)
+}
+
+// CanReadUsers checks if a user can read other users within an organization
+func (e *OrganizationEnforcer) CanReadUsers(ctx context.Context, user string, organization string) (bool, error) {
+	_, span := telemetry.Tracer().Start(ctx, "CanReadUsers")
+	defer span.End()
+
+	return e.enforcer.Enforce(user, "user", "read", organization)
+}
+
+// CanUpdateUsers checks if a user can update other users within an organization
+func (e *OrganizationEnforcer) CanUpdateUsers(ctx context.Context, user string, organization string) (bool, error) {
+	_, span := telemetry.Tracer().Start(ctx, "CanUpdateUsers")
+	defer span.End()
+
+	return e.enforcer.Enforce(user, "user", "update", organization)
+}
+
+// CanDeleteUsers checks if a user can delete other users within an organization
+func (e *OrganizationEnforcer) CanDeleteUsers(ctx context.Context, user string, organization string) (bool, error) {
+	_, span := telemetry.Tracer().Start(ctx, "CanDeleteUsers")
+	defer span.End()
+
+	return e.enforcer.Enforce(user, "user", "delete", organization)
 }
 
 // UpdateUserRole updates a user's role within an organization
-func (e *Enforcer) UpdateUserRole(ctx context.Context, userId, organizationId, role string) error {
+func (e *OrganizationEnforcer) UpdateUserRole(ctx context.Context, userId, organizationId, role string) error {
 	_, span := telemetry.Tracer().Start(ctx, "UpdateUserRole")
 	defer span.End()
 
 	// First, remove all existing organization roles for this user in this organization
-	roles, err := e.casbin.GetRolesForUser(userId)
+	roles, err := e.enforcer.GetRolesForUser(userId)
 	if err != nil {
 		return stacktrace.NewStackTraceErrorf("failed to get user roles: %w", err)
 	}
@@ -115,7 +158,7 @@ func (e *Enforcer) UpdateUserRole(ctx context.Context, userId, organizationId, r
 	orgPrefix := fmt.Sprintf("org_%s:", organizationId)
 	for _, existingRole := range roles {
 		if len(existingRole) > len(orgPrefix) && existingRole[len(existingRole)-len(organizationId):] == organizationId {
-			_, err := e.casbin.DeleteRoleForUser(userId, existingRole)
+			_, err := e.enforcer.DeleteRoleForUser(userId, existingRole)
 			if err != nil {
 				return stacktrace.NewStackTraceErrorf("failed to remove existing role: %w", err)
 			}
@@ -124,7 +167,7 @@ func (e *Enforcer) UpdateUserRole(ctx context.Context, userId, organizationId, r
 
 	// Add the new role
 	newOrgRole := fmt.Sprintf("org_%s:%s", role, organizationId)
-	_, err = e.casbin.AddRoleForUser(userId, newOrgRole)
+	_, err = e.enforcer.AddRoleForUser(userId, newOrgRole)
 	if err != nil {
 		return stacktrace.NewStackTraceErrorf("failed to add new role: %w", err)
 	}
@@ -135,16 +178,16 @@ func (e *Enforcer) UpdateUserRole(ctx context.Context, userId, organizationId, r
 		return stacktrace.NewStackTraceErrorf("failed to add organization policies: %w", err)
 	}
 
-	return e.casbin.SavePolicy()
+	return e.enforcer.SavePolicy()
 }
 
 // RemoveUserFromOrganization removes all user roles within an organization (idempotent)
-func (e *Enforcer) RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error {
+func (e *OrganizationEnforcer) RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error {
 	_, span := telemetry.Tracer().Start(ctx, "RemoveUserFromOrganization")
 	defer span.End()
 
 	// Get all roles for the user
-	roles, err := e.casbin.GetRolesForUser(userId)
+	roles, err := e.enforcer.GetRolesForUser(userId)
 	if err != nil {
 		return stacktrace.NewStackTraceErrorf("failed to get user roles: %w", err)
 	}
@@ -152,9 +195,9 @@ func (e *Enforcer) RemoveUserFromOrganization(ctx context.Context, userId, organ
 	// Remove all organization-specific roles for this user in this organization (idempotent)
 	for _, role := range roles {
 		if len(role) > len(organizationId) && role[len(role)-len(organizationId):] == organizationId {
-			_, _ = e.casbin.DeleteRoleForUser(userId, role) // Ignore errors - might not exist
+			_, _ = e.enforcer.DeleteRoleForUser(userId, role) // Ignore errors - might not exist
 		}
 	}
 
-	return e.casbin.SavePolicy()
+	return e.enforcer.SavePolicy()
 }

@@ -95,11 +95,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	authEnforcer, err := casbin.NewEnforcer(ctx, pgxAdapter)
+	casbinEnforcer, err := casbin.NewEnforcer(ctx, pgxAdapter)
 	if err != nil {
-		logger.Error("could not create auth enforcer", slog.Any("err", err))
+		logger.Error("could not create casbin enforcer", slog.Any("err", err))
 		os.Exit(1)
 	}
+
+	// Create domain-specific enforcers
+	superAdminEnforcer := casbin.NewSuperAdminEnforcer(casbinEnforcer)
+	userEnforcer := casbin.NewUserEnforcer(casbinEnforcer)
+	organizationEnforcer := casbin.NewOrganizationEnforcer(casbinEnforcer)
+	organizationAccessEnforcer := casbin.NewOrganizationAccessEnforcer(casbinEnforcer)
+	endDeviceEnforcer := casbin.NewEndDeviceEnforcer(casbinEnforcer)
+	lorawanEnforcer := casbin.NewLoRaWANEnforcer(casbinEnforcer)
 
 	ttnClient, err := ttn.NewTTNClient(
 		ttn.WithRegion(ttn.TTNRegion(cfg.TTNRegion)),
@@ -113,7 +121,7 @@ func main() {
 
 	edMgr := domain.NewEndDeviceManager(edStore, ttnClient, cfg.ApplicationId, xid.StringId, protobuf.Validate)
 	lorawanMgr := domain.NewLoRaWANManager(edStore, xid.StringId, protobuf.Validate)
-	userOrgMgr := domain.NewUserOrganizationManager(userOrgStore, authEnforcer, protobuf.Validate)
+	userOrgMgr := domain.NewUserOrganizationManager(userOrgStore, organizationEnforcer, protobuf.Validate)
 	organizationManager := domain.NewOrganizationManager(
 		orgStore,
 		xid.StringId,
@@ -133,8 +141,7 @@ func main() {
 	}
 
 	authenticationInterceptor := connectrpc.AuthenticationInterceptor()
-	superAdminInterceptor := connectrpc.SuperAdminInterceptor(authEnforcer)
-	userAuthorizationInterceptor := connectrpc.UserAuthorizationInterceptor(authEnforcer)
+	superAdminInterceptor := connectrpc.SuperAdminInterceptor(superAdminEnforcer)
 
 	srv, err := mux.New(
 		mux.NewChiMux(chi.NewRouter()),
@@ -143,7 +150,7 @@ func main() {
 
 		// Organization
 		mux.WithHandler(organizationv1connect.NewOrganizationServiceHandler(
-			connectrpc.NewOrganizationHandler(organizationManager),
+			connectrpc.NewOrganizationHandler(organizationManager, organizationAccessEnforcer),
 			connect.WithInterceptors(
 				authenticationInterceptor,
 				superAdminInterceptor,
@@ -151,37 +158,34 @@ func main() {
 			),
 		)),
 		mux.WithHandler(organizationv1connect.NewUserServiceHandler(
-			connectrpc.NewUserHandler(userManager),
+			connectrpc.NewUserHandler(userManager, userEnforcer),
 			connect.WithInterceptors(
 				authenticationInterceptor,
 				superAdminInterceptor,
-				userAuthorizationInterceptor,
 				protovalidateInterceptor,
 			),
 		)),
 		mux.WithHandler(organizationv1connect.NewOrganizationUserServiceHandler(
-			connectrpc.NewOrganizationUserHandler(userOrgMgr),
+			connectrpc.NewOrganizationUserHandler(userOrgMgr, organizationEnforcer),
 			connect.WithInterceptors(
 				authenticationInterceptor,
 				superAdminInterceptor,
-				connectrpc.OrganizationUserAuthorizationInterceptor(authEnforcer),
 				protovalidateInterceptor,
 			),
 		)),
 
 		// IoT
 		mux.WithHandler(iotv1connect.NewEndDeviceServiceHandler(
-			connectrpc.NewEndDeviceHandler(edMgr),
+			connectrpc.NewEndDeviceHandler(edMgr, endDeviceEnforcer),
 			connect.WithInterceptors(
 				authenticationInterceptor,
 				superAdminInterceptor,
-				connectrpc.EndDeviceAuthorizationInterceptor(authEnforcer),
 				protovalidateInterceptor,
 			),
 		)),
 
 		mux.WithHandler(iotv1connect.NewLoRaWANServiceHandler(
-			connectrpc.NewLoRaWANHandler(lorawanMgr),
+			connectrpc.NewLoRaWANHandler(lorawanMgr, lorawanEnforcer),
 			connect.WithInterceptors(
 				authenticationInterceptor,
 				superAdminInterceptor,

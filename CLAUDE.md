@@ -1,78 +1,154 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Ponix Project - Claude Instructions
 
 ## Project Overview
-This is a Go-based monorepo for ponix software using gRPC/Connect-RPC for communication and PostgreSQL for data persistence.
+Go-based monorepo for ponix IoT platform using Connect-RPC for API communication, PostgreSQL for data persistence, and Casbin for authorization.
 
 ## Key Technologies
 - Go 1.24
-- Connect-RPC for API communication
+- Connect-RPC (gRPC-compatible) with Protocol Buffers
 - PostgreSQL with sqlc for type-safe SQL
 - Atlas for database migrations
-- OpenTelemetry for observability
+- Casbin for RBAC authorization
+- OpenTelemetry for observability (logs, metrics, traces)
 - Chi router for HTTP routing
 - Docker Compose for local development
+- NATS for messaging
+- InfluxDB + Telegraf for metrics storage
 
 ## Build and Development Commands
 
 ### Mage Commands (primary build tool)
-- `mage stack:up` - Start Docker dependencies (PostgreSQL, etc.)
-- `mage stack:down` - Stop Docker dependencies
-- `mage db:gen` - Generate database code with sqlc
-- `mage db:migrate <name>` - Create new database migration
+- `mage stack:up` - Start all Docker dependencies (PostgreSQL, NATS, InfluxDB, Grafana, etc.)
+- `mage stack:down` - Stop all Docker dependencies
+- `mage db:gen` - Generate database code with sqlc (run after modifying SQL files)
+- `mage db:migrate <name>` - Create new database migration with Atlas
 
 ### Standard Go Commands
 - `go run ./cmd/ponix-all-in-one` - Run the main application
 - `go test ./...` - Run all tests
+- `go test -run TestName ./package/...` - Run specific test
 - `go mod tidy` - Clean up dependencies
+- `go fmt ./...` - Format all Go code
+- `go vet ./...` - Run static analysis
 
-### Database Operations
-- Database migrations are in `internal/postgres/atlas/`
-- SQL schema files are in `schema/`
-- Generated database code is in `internal/postgres/sqlc/`
-- Table and index sql operations should go in `schema/schema.sql`
-- Queries should go in to specific entity named files under `schema`
-- Whenever we add a new file under `schema` for queries, they need to be added to our `sqlc.yaml` file
+### Database Workflow
+1. Modify schema in `schema/schema.sql` for tables/indexes
+2. Add queries to entity-specific files under `schema/` (e.g., `schema/end_device.sql`)
+3. If creating new query file, add it to `sqlc.yaml` queries section
+4. Run `mage db:migrate <migration_name>` to create migration
+5. Run `mage db:gen` to regenerate type-safe Go code
 
-## Project Structure
-- `cmd/` - Application entry points
-- `internal/` - Private application code
-  - `connectrpc/` - Connect-RPC service implementations
-  - `domain/` - Business domain models
-  - `postgres/` - Database layer with migrations and generated code
-  - `telemetry/` - OpenTelemetry instrumentation
-- `schema/` - SQL schema definitions
+**File Locations:**
+- Migrations: `internal/postgres/atlas/`
+- Generated code: `internal/postgres/sqlc/`
+- Schema definition: `schema/schema.sql`
+- Query files: `schema/*.sql`
 
-## Development Workflow
-1. Start dependencies: `mage stack:up`
-2. Generate database code after schema changes: `mage db:gen`
-3. Create migrations for schema changes: `mage db:migrate <migration_name>`
-4. Run application: `go run ./cmd/ponix-all-in-one`
+## High-Level Architecture
 
-## Testing
-Run tests with: `go test ./...`
+### Layered Architecture
+```
+┌─ cmd/ponix-all-in-one/         Entry point, service initialization
+├─ internal/connectrpc/          RPC handlers (API layer)
+├─ internal/domain/              Business logic and domain models
+├─ internal/postgres/            Data persistence layer
+│  ├─ atlas/                    Database migrations
+│  └─ sqlc/                     Generated type-safe queries
+├─ internal/casbin/              Authorization enforcement
+└─ internal/telemetry/           OpenTelemetry instrumentation
+```
 
-## Authorization Pattern for RPC Services
+### Core Services and Data Flow
+1. **RPC Request** → ConnectRPC Handler
+2. **Authentication** → Extract user from context (currently hardcoded as `dev-user-123`)
+3. **Authorization** → Casbin enforcer checks permissions
+4. **Business Logic** → Domain layer processes request
+5. **Data Access** → PostgreSQL via SQLC-generated code
+6. **Response** → ConnectRPC response with proper error codes
 
-### Service Structure
-- Inject `*auth.Enforcer` into service constructors
-- Create authorization helper: `authorizeRequest(ctx, action, orgID)`
+### Multi-Tenancy Model
+- All entities scoped by `organization_id`
+- Users can belong to multiple organizations with different roles
+- Authorization enforced at organization level
+- Role hierarchy: Super Admin > Org Admin > Org Member > Org Viewer
 
-### RPC Method Pattern
-1. Extract `organizationID` from request
-2. Call `authorizeRequest(ctx, action, orgID)` before business logic
-3. Return `connect.CodePermissionDenied` if unauthorized
+## Authorization System (Casbin)
 
-### Action Mapping
-- `Create*` → `"create"`
-- `Get*`, `List*` → `"read"`
-- `Update*` → `"update"`
-- `Delete*` → `"delete"`
+### Authorization Pattern for RPC Services
+```go
+// Standard pattern in every RPC method:
+func (s *Service) Method(ctx context.Context, req *Request) (*Response, error) {
+    // 1. Extract organizationID from request
+    orgID := req.GetOrganizationId()
+    
+    // 2. Authorize before business logic
+    if err := s.authorizeRequest(ctx, "action", orgID); err != nil {
+        return nil, err // Returns connect.CodePermissionDenied
+    }
+    
+    // 3. Execute business logic
+    // ...
+}
+```
+
+### Action Mapping Convention
+- `Create*` methods → `"create"` action
+- `Get*`, `List*` methods → `"read"` action
+- `Update*` methods → `"update"` action
+- `Delete*` methods → `"delete"` action
+
+### Casbin Model
+- Format: `sub, obj, act, org` (subject, object, action, organization)
+- Policies stored in PostgreSQL `casbin_rule` table
+- Separate enforcers per domain (User, Organization, EndDevice, LoRaWAN)
 
 ### Context Requirements
-- Extract `userID` from JWT/session in request context
-- Use `enforcer.CanAccessEndDevice(ctx, userID, action, organizationID)`
+- User ID extracted from request context (set by AuthenticationInterceptor)
+- Organization ID extracted from request payload
+- Enforcer checks: `CanAccess*(ctx, userID, action, organizationID)`
 
-## Code Quality
-Always run `go fmt` and `go vet` before committing changes.
+## Service Integration Points
 
-Never `if user if var1, err := SomeFunc(); err != nil {}` always do `if err != nil {}` after calling the function if it returns an error
+### Connect-RPC Services
+- **Organization Service** - Organization and user association management
+- **User Service** - User CRUD operations
+- **End Device Service** - IoT device management
+- **LoRaWAN Service** - LoRaWAN-specific configurations
+
+### External Integrations
+- **The Things Network (TTN)** - LoRaWAN network server integration
+- **NATS** - Message broker for webhook events
+- **InfluxDB** - Time-series metrics storage via Telegraf
+
+### Service Dependencies
+- Services initialized in `cmd/ponix-all-in-one/main.go`
+- Dependency injection via constructor parameters
+- Shared database connection pool
+- Common telemetry and authorization middleware
+
+## Code Style Requirements
+
+### Error Handling
+```go
+// CORRECT - Check error immediately
+result, err := SomeFunction()
+if err != nil {
+    return nil, err
+}
+
+// INCORRECT - Never embed error check in declaration
+if result, err := SomeFunction(); err != nil {
+    return nil, err
+}
+```
+
+### Code Quality
+- Always run `go fmt ./...` before committing
+- Run `go vet ./...` for static analysis
+- Ensure proper OpenTelemetry spans for observability
+- Use structured logging with `slog`
+- Validate inputs using `protovalidate` annotations in proto files

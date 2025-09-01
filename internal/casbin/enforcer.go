@@ -8,11 +8,6 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
-// Enforcer wraps Casbin enforcer for organization-based access control
-type Enforcer struct {
-	casbin *casbin.Enforcer
-}
-
 type Adapter interface {
 	// LoadPolicy loads all policy rules from the storage.
 	LoadPolicy(model model.Model) error
@@ -31,7 +26,7 @@ type Adapter interface {
 }
 
 // NewEnforcer creates a new Casbin enforcer with the organization model and pgx adapter
-func NewEnforcer(ctx context.Context, a Adapter) (*Enforcer, error) {
+func NewEnforcer(ctx context.Context, a Adapter) (*casbin.Enforcer, error) {
 	m := initializeModel()
 
 	e, err := casbin.NewEnforcer(m, a)
@@ -39,15 +34,13 @@ func NewEnforcer(ctx context.Context, a Adapter) (*Enforcer, error) {
 		return nil, stacktrace.NewStackTraceErrorf("failed to create enforcer: %w", err)
 	}
 
-	enforcer := &Enforcer{casbin: e}
-
 	// Initialize default policies in code
-	err = enforcer.initializePolicies(ctx)
+	err = initializePolicies(e)
 	if err != nil {
 		return nil, stacktrace.NewStackTraceErrorf("failed to initialize policies: %w", err)
 	}
 
-	return enforcer, nil
+	return e, nil
 }
 
 func initializeModel() model.Model {
@@ -63,9 +56,9 @@ func initializeModel() model.Model {
 }
 
 // initializePolicies sets up the default role-based policies in code
-func (e *Enforcer) initializePolicies(_ctx context.Context) error {
+func initializePolicies(e *casbin.Enforcer) error {
 	// Clear existing policies to start fresh
-	e.casbin.ClearPolicy()
+	e.ClearPolicy()
 
 	// Define base role policies for end devices and organizations
 	policies := [][]string{
@@ -95,14 +88,14 @@ func (e *Enforcer) initializePolicies(_ctx context.Context) error {
 
 	// Add all policies
 	for _, policy := range policies {
-		_, err := e.casbin.AddPolicy(policy)
+		_, err := e.AddPolicy(policy)
 		if err != nil {
 			return stacktrace.NewStackTraceErrorf("failed to add policy %v: %w", policy, err)
 		}
 	}
 
 	// Save policies to database
-	err := e.casbin.SavePolicy()
+	err := e.SavePolicy()
 	if err != nil {
 		return stacktrace.NewStackTraceErrorf("failed to save policies: %w", err)
 	}
