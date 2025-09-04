@@ -60,6 +60,52 @@ services:
       POSTGRES_DB: ponix
     networks:
       - ponix
+  # influxdb:
+  #   image: influxdb:2.7-alpine
+  #   ports:
+  #     - 8086:8086
+  #   environment:
+  #     DOCKER_INFLUXDB_INIT_MODE: setup
+  #     DOCKER_INFLUXDB_INIT_USERNAME: admin
+  #     DOCKER_INFLUXDB_INIT_PASSWORD: admin123456
+  #     DOCKER_INFLUXDB_INIT_ORG: ponix
+  #     DOCKER_INFLUXDB_INIT_BUCKET: webhooks
+  #     DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ponix-super-secret-auth-token
+  #   volumes:
+  #     - influxdb-data:/var/lib/influxdb2
+  #     - influxdb-config:/etc/influxdb2
+  #   networks:
+  #     - ponix
+  # telegraf:
+  #   image: telegraf:1.31-alpine
+  #   volumes:
+  #     - ./.influxdb/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+  #   environment:
+  #     INFLUX_TOKEN: ponix-super-secret-auth-token
+  #     INFLUX_ORG: ponix
+  #     INFLUX_BUCKET: webhooks
+  #     INFLUX_URL: http://influxdb:8086
+  #   depends_on:
+  #     - influxdb
+  #     - nats
+  #   networks:
+  #     - ponix
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --config /etc/cloudflared/config.yaml run
+    volumes:
+      - ./.cloudflared/cloudflared-config.yaml:/etc/cloudflared/config.yaml:ro
+      - ${HOME}/.cloudflared/ponix-api.json:/etc/cloudflared/credentials.json:ro
+      - ${HOME}/.cloudflared/cert.pem:/etc/cloudflared/cert.pem:ro 
+    depends_on:
+      - ponix-all-in-one
+    networks:
+      - ponix
+    restart: unless-stopped
+
 networks:
   ponix:
     name: ponix
+volumes:
+  influxdb-data:
+  influxdb-config:

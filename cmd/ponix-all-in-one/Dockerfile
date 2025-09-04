@@ -10,7 +10,7 @@ RUN apt-get update && \
     curl https://mise.run | sh && \
     mv /root/.local/bin/mise /usr/sbin/mise
 
-COPY ./.mise.toml .
+COPY ./.mise.docker.toml ./.mise.toml
 
 RUN mise trust && mise install --yes && \
     eval "$(mise activate bash)"

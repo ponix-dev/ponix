@@ -12,6 +12,7 @@ require (
 	connectrpc.com/validate v0.1.0
 	github.com/bufbuild/protovalidate-go v0.8.2
 	github.com/casbin/casbin/v2 v2.109.0
+	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/magefile/mage v1.15.0

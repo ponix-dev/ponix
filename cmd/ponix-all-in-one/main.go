@@ -10,7 +10,6 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/ponix-dev/ponix/internal/casbin"
 	"github.com/ponix-dev/ponix/internal/conf"
 	"github.com/ponix-dev/ponix/internal/connectrpc"
@@ -144,7 +143,7 @@ func main() {
 	superAdminInterceptor := connectrpc.SuperAdminInterceptor(superAdminEnforcer)
 
 	srv, err := mux.New(
-		mux.NewChiMux(chi.NewRouter()),
+		mux.NewChiMux(),
 		mux.WithLogger(logger),
 		mux.WithPort(cfg.Port),
 

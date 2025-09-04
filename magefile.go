@@ -24,28 +24,6 @@ func mageDir() string {
 	return dir
 }
 
-type Stack mg.Namespace
-
-// starts dependencies for stack
-func (Stack) Up() error {
-	err := sh.Run("docker", "compose", "-f", "docker-compose.yaml", "up", "-d")
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// stops dependencies for stack
-func (Stack) Down() error {
-	err := sh.Run("docker", "compose", "-f", "docker-compose.yaml", "down")
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type DB mg.Namespace
 
 // generates database code
