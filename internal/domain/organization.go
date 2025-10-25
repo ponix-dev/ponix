@@ -9,16 +9,19 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// DefaultAdminer handles adding the default admin user to newly created organizations.
 type DefaultAdminer interface {
 	AddDefaultAdminUser(ctx context.Context, organizationId string) error
 }
 
+// OrganizationStorer defines the persistence operations for organizations.
 type OrganizationStorer interface {
 	CreateOrganization(ctx context.Context, organization *organizationv1.Organization) error
 	GetOrganization(ctx context.Context, organizationId string) (*organizationv1.Organization, error)
 	GetUserOrganizationsWithDetails(ctx context.Context, userId string) ([]*organizationv1.Organization, error)
 }
 
+// OrganizationManager orchestrates organization-related business logic.
 type OrganizationManager struct {
 	organizationStore OrganizationStorer
 	stringId          StringId
@@ -26,6 +29,7 @@ type OrganizationManager struct {
 	defaultAdminer    DefaultAdminer
 }
 
+// NewOrganizationManager creates a new instance of OrganizationManager with the provided dependencies.
 func NewOrganizationManager(os OrganizationStorer, stringId StringId, validate Validate, defaultAdminer DefaultAdminer) *OrganizationManager {
 	return &OrganizationManager{
 		organizationStore: os,
@@ -35,6 +39,8 @@ func NewOrganizationManager(os OrganizationStorer, stringId StringId, validate V
 	}
 }
 
+// CreateOrganization creates a new organization with a unique ID and automatically adds
+// the requesting user as an admin of the organization.
 func (mgr *OrganizationManager) CreateOrganization(ctx context.Context, createReq *organizationv1.CreateOrganizationRequest) (*organizationv1.Organization, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateOrganization")
 	defer span.End()
@@ -69,6 +75,7 @@ func (mgr *OrganizationManager) CreateOrganization(ctx context.Context, createRe
 	return organization, nil
 }
 
+// GetOrganization retrieves an organization by its ID.
 func (mgr *OrganizationManager) GetOrganization(ctx context.Context, organizationReq *organizationv1.GetOrganizationRequest) (*organizationv1.Organization, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetOrganization")
 	defer span.End()
@@ -86,6 +93,7 @@ func (mgr *OrganizationManager) GetOrganization(ctx context.Context, organizatio
 	return organization, nil
 }
 
+// GetUserOrganizations retrieves all organizations that a user belongs to.
 func (mgr *OrganizationManager) GetUserOrganizations(ctx context.Context, userId string) ([]*organizationv1.Organization, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizations")
 	defer span.End()

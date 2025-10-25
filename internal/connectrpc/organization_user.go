@@ -10,12 +10,14 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
+// OrganizationUserManager handles user-organization relationship operations.
 type OrganizationUserManager interface {
 	AddOrganizationUser(ctx context.Context, orgUser *organizationv1.OrganizationUser) error
 	UpdateUserRole(ctx context.Context, userId, organizationId, role string) error
 	RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error
 }
 
+// OrganizationUserAuthorizer checks permissions for user-organization operations.
 type OrganizationUserAuthorizer interface {
 	CanCreateUsers(ctx context.Context, user string, organization string) (bool, error)
 	CanReadUsers(ctx context.Context, user string, organization string) (bool, error)
@@ -23,11 +25,13 @@ type OrganizationUserAuthorizer interface {
 	CanDeleteUsers(ctx context.Context, user string, organization string) (bool, error)
 }
 
+// OrganizationUserHandler implements Connect RPC handlers for user-organization relationship operations.
 type OrganizationUserHandler struct {
 	organizationUserManager OrganizationUserManager
 	authorizer              OrganizationUserAuthorizer
 }
 
+// NewOrganizationUserHandler creates a new OrganizationUserHandler with the provided dependencies.
 func NewOrganizationUserHandler(organizationUserManager OrganizationUserManager, authorizer OrganizationUserAuthorizer) *OrganizationUserHandler {
 	return &OrganizationUserHandler{
 		organizationUserManager: organizationUserManager,
@@ -35,6 +39,8 @@ func NewOrganizationUserHandler(organizationUserManager OrganizationUserManager,
 	}
 }
 
+// CreateOrganizationUser handles RPC requests to add a user to an organization with a specified role.
+// Requires super admin privileges or user creation permission in the organization.
 func (handler *OrganizationUserHandler) CreateOrganizationUser(ctx context.Context, req *connect.Request[organizationv1.CreateOrganizationUserRequest]) (*connect.Response[organizationv1.CreateOrganizationUserResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateOrganizationUser")
 	defer span.End()
@@ -76,6 +82,8 @@ func (handler *OrganizationUserHandler) CreateOrganizationUser(ctx context.Conte
 	return connect.NewResponse(response), nil
 }
 
+// UpdateOrganizationUserRole handles RPC requests to change a user's role within an organization.
+// Requires super admin privileges or user update permission in the organization.
 func (handler *OrganizationUserHandler) UpdateOrganizationUserRole(ctx context.Context, req *connect.Request[organizationv1.UpdateOrganizationUserRoleRequest]) (*connect.Response[organizationv1.UpdateOrganizationUserRoleResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "UpdateOrganizationUserRole")
 	defer span.End()
@@ -112,6 +120,8 @@ func (handler *OrganizationUserHandler) UpdateOrganizationUserRole(ctx context.C
 	return connect.NewResponse(response), nil
 }
 
+// RemoveOrganizationUser handles RPC requests to remove a user from an organization.
+// Requires super admin privileges or user deletion permission in the organization.
 func (handler *OrganizationUserHandler) RemoveOrganizationUser(ctx context.Context, req *connect.Request[organizationv1.RemoveOrganizationUserRequest]) (*connect.Response[organizationv1.RemoveOrganizationUserResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "RemoveOrganizationUser")
 	defer span.End()

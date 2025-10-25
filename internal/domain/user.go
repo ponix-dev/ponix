@@ -9,17 +9,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// UserStorer defines the persistence operations for users.
 type UserStorer interface {
 	CreateUser(ctx context.Context, user *organizationv1.User) error
 	GetUser(ctx context.Context, userId string) (*organizationv1.User, error)
 }
 
+// UserManager orchestrates user-related business logic.
 type UserManager struct {
 	userStore UserStorer
 	stringId  StringId
 	validate  Validate
 }
 
+// NewUserManager creates a new instance of UserManager with the provided dependencies.
 func NewUserManager(us UserStorer, stringId StringId, validate Validate) *UserManager {
 	return &UserManager{
 		userStore: us,
@@ -28,6 +31,7 @@ func NewUserManager(us UserStorer, stringId StringId, validate Validate) *UserMa
 	}
 }
 
+// CreateUser creates a new user with a unique ID.
 func (mgr *UserManager) CreateUser(ctx context.Context, createReq *organizationv1.CreateUserRequest) (*organizationv1.User, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateUser")
 	defer span.End()
@@ -58,6 +62,7 @@ func (mgr *UserManager) CreateUser(ctx context.Context, createReq *organizationv
 	return user, nil
 }
 
+// GetUser retrieves a user by their ID.
 func (mgr *UserManager) GetUser(ctx context.Context, userReq *organizationv1.GetUserRequest) (*organizationv1.User, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetUser")
 	defer span.End()

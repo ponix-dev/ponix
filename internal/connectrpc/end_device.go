@@ -10,10 +10,12 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
+// EndDeviceManager handles end device business operations.
 type EndDeviceManager interface {
 	CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organization string) (*iotv1.EndDevice, error)
 }
 
+// EndDeviceAuthorizer checks permissions for end device operations.
 type EndDeviceAuthorizer interface {
 	CanCreateEndDevice(ctx context.Context, userId string, organizationId string) (bool, error)
 	CanReadEndDevice(ctx context.Context, userId string, organizationId string) (bool, error)
@@ -21,11 +23,13 @@ type EndDeviceAuthorizer interface {
 	CanDeleteEndDevice(ctx context.Context, userId string, organizationId string) (bool, error)
 }
 
+// EndDeviceHandler implements Connect RPC handlers for end device operations.
 type EndDeviceHandler struct {
 	endDeviceManager EndDeviceManager
 	authorizer       EndDeviceAuthorizer
 }
 
+// NewEndDeviceHandler creates a new EndDeviceHandler with the provided dependencies.
 func NewEndDeviceHandler(edmgr EndDeviceManager, authorizer EndDeviceAuthorizer) *EndDeviceHandler {
 	return &EndDeviceHandler{
 		endDeviceManager: edmgr,
@@ -33,11 +37,13 @@ func NewEndDeviceHandler(edmgr EndDeviceManager, authorizer EndDeviceAuthorizer)
 	}
 }
 
+// CreateEndDevice handles RPC requests to create a new end device.
+// Requires super admin privileges or device creation permission in the organization.
+// Organization ID can be provided in the request or via X-Organization-ID header.
 func (handler *EndDeviceHandler) CreateEndDevice(ctx context.Context, req *connect.Request[iotv1.CreateEndDeviceRequest]) (*connect.Response[iotv1.CreateEndDeviceResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
 
-	// TODO: we should just add this to the protobuf definition
 	// Extract organization from request
 	organization := GetOrganizationFromRequest(req.Msg)
 	if organization == "" {
@@ -82,6 +88,8 @@ func (handler *EndDeviceHandler) CreateEndDevice(ctx context.Context, req *conne
 	return resp, nil
 }
 
+// EndDevice handles RPC requests to retrieve a single end device.
+// Requires super admin privileges or device read permission in the organization.
 func (handler *EndDeviceHandler) EndDevice(ctx context.Context, req *connect.Request[iotv1.EndDeviceRequest]) (*connect.Response[iotv1.EndDeviceResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "EndDevice")
 	defer span.End()
@@ -120,6 +128,8 @@ func (handler *EndDeviceHandler) EndDevice(ctx context.Context, req *connect.Req
 	return nil, nil
 }
 
+// OrganizationEndDevices handles RPC requests to list all end devices in an organization.
+// Requires super admin privileges or device read permission in the organization.
 func (handler *EndDeviceHandler) OrganizationEndDevices(ctx context.Context, req *connect.Request[iotv1.OrganizationEndDevicesRequest]) (*connect.Response[iotv1.OrganizationEndDevicesResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "OrganizationEndDevices")
 	defer span.End()
@@ -151,6 +161,8 @@ func (handler *EndDeviceHandler) OrganizationEndDevices(ctx context.Context, req
 	return resp, nil
 }
 
+// EndDeviceData handles RPC requests to retrieve time-series data for an end device.
+// Requires super admin privileges or device read permission in the organization.
 func (handler *EndDeviceHandler) EndDeviceData(ctx context.Context, req *connect.Request[iotv1.EndDeviceDataRequest]) (*connect.Response[iotv1.EndDeviceDataResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "EndDeviceData")
 	defer span.End()

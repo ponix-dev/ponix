@@ -35,12 +35,12 @@ const (
 	FreqPlanRU864_870 LoRaWANFrequencyPlan = "RU_864_870"
 )
 
-// String returns the string representation of the frequency plan
+// String returns the string representation of the frequency plan.
 func (f LoRaWANFrequencyPlan) String() string {
 	return string(f)
 }
 
-// GetFrequencyPlansByRegion returns available frequency plans for a given region
+// GetFrequencyPlansByRegion returns available frequency plans for a given region.
 func GetFrequencyPlansByRegion(region string) []LoRaWANFrequencyPlan {
 	switch region {
 	case "EU", "Europe":
@@ -87,7 +87,7 @@ func GetFrequencyPlansByRegion(region string) []LoRaWANFrequencyPlan {
 	}
 }
 
-// GetAllFrequencyPlans returns all available frequency plans
+// GetAllFrequencyPlans returns all available frequency plans.
 func GetAllFrequencyPlans() []LoRaWANFrequencyPlan {
 	return []LoRaWANFrequencyPlan{
 		FreqPlanEU863_870,
@@ -106,7 +106,7 @@ func GetAllFrequencyPlans() []LoRaWANFrequencyPlan {
 	}
 }
 
-// IsValidFrequencyPlan checks if a frequency plan is valid
+// IsValidFrequencyPlan checks if a frequency plan ID is valid.
 func IsValidFrequencyPlan(plan string) bool {
 	allPlans := GetAllFrequencyPlans()
 	for _, validPlan := range allPlans {
@@ -117,7 +117,7 @@ func IsValidFrequencyPlan(plan string) bool {
 	return false
 }
 
-// GetDefaultFrequencyPlan returns the default frequency plan for a region
+// GetDefaultFrequencyPlan returns the default frequency plan for a region.
 func GetDefaultFrequencyPlan(region string) LoRaWANFrequencyPlan {
 	plans := GetFrequencyPlansByRegion(region)
 	if len(plans) > 0 {
@@ -126,7 +126,7 @@ func GetDefaultFrequencyPlan(region string) LoRaWANFrequencyPlan {
 	return FreqPlanUS902_928 // Fallback to US plan
 }
 
-// FrequencyPlanInfo contains metadata about a frequency plan
+// FrequencyPlanInfo contains detailed metadata about a frequency plan.
 type FrequencyPlanInfo struct {
 	Id          LoRaWANFrequencyPlan
 	Name        string
@@ -136,7 +136,7 @@ type FrequencyPlanInfo struct {
 	Bandwidth   string
 }
 
-// GetFrequencyPlanInfo returns detailed information about frequency plans
+// GetFrequencyPlanInfo returns detailed metadata for all frequency plans.
 func GetFrequencyPlanInfo() map[LoRaWANFrequencyPlan]FrequencyPlanInfo {
 	return map[LoRaWANFrequencyPlan]FrequencyPlanInfo{
 		FreqPlanEU863_870: {

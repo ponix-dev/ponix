@@ -1,5 +1,7 @@
 package conf
 
+// ManagementConfig contains configuration for the management service.
+// It includes database connection settings and The Things Network (TTN) integration parameters.
 type ManagementConfig struct {
 	Port               string `env:"PORT"`
 	DatabaseUrl        string `env:"DATABASE_URL"`

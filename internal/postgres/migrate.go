@@ -18,6 +18,7 @@ func migrationsPath() string {
 	return "file://" + filepath.Join("migrations", "atlas")
 }
 
+// RunMigrations applies all pending database migrations using Atlas.
 func RunMigrations(ctx context.Context, connUrl ConnUrl) error {
 	workdir, err := atlasexec.NewWorkingDir(
 		atlasexec.WithMigrations(

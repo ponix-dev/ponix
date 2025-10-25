@@ -8,6 +8,7 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
+// LoRaWANHardwareTypeStorer defines the persistence operations for LoRaWAN hardware types.
 type LoRaWANHardwareTypeStorer interface {
 	GetLoRaWANHardwareType(ctx context.Context, hardwareType string) (*iotv1.LoRaWANHardwareData, error)
 	AddLoRaWANHardwareType(ctx context.Context, hardwareData *iotv1.LoRaWANHardwareData) error
@@ -16,12 +17,14 @@ type LoRaWANHardwareTypeStorer interface {
 	DeleteLoRaWANHardwareType(ctx context.Context, hardwareType string) error
 }
 
+// LoRaWANManager orchestrates LoRaWAN hardware type catalog business logic.
 type LoRaWANManager struct {
 	hardwareTypeStore LoRaWANHardwareTypeStorer
 	stringId          StringId
 	validate          Validate
 }
 
+// NewLoRaWANManager creates a new instance of LoRaWANManager with the provided dependencies.
 func NewLoRaWANManager(store LoRaWANHardwareTypeStorer, stringId StringId, validate Validate) *LoRaWANManager {
 	return &LoRaWANManager{
 		hardwareTypeStore: store,
@@ -30,9 +33,7 @@ func NewLoRaWANManager(store LoRaWANHardwareTypeStorer, stringId StringId, valid
 	}
 }
 
-// ===== LoRaWAN Hardware Type Management =====
-
-// CreateLoRaWANHardwareType creates a new LoRaWAN hardware type from a request
+// CreateLoRaWANHardwareType creates a new LoRaWAN hardware type with a unique ID.
 func (mgr *LoRaWANManager) CreateLoRaWANHardwareType(ctx context.Context, createReq *iotv1.CreateLoRaWANHardwareTypeRequest) (*iotv1.LoRaWANHardwareData, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateLoRaWANHardwareType")
 	defer span.End()
@@ -66,7 +67,7 @@ func (mgr *LoRaWANManager) CreateLoRaWANHardwareType(ctx context.Context, create
 	return hardwareData, nil
 }
 
-// GetLoRaWANHardwareType retrieves a LoRaWAN hardware type by
+// GetLoRaWANHardwareType retrieves a LoRaWAN hardware type by its ID.
 func (mgr *LoRaWANManager) GetLoRaWANHardwareType(ctx context.Context, hardwareType string) (*iotv1.LoRaWANHardwareData, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetLoRaWANHardwareType")
 	defer span.End()
@@ -74,7 +75,7 @@ func (mgr *LoRaWANManager) GetLoRaWANHardwareType(ctx context.Context, hardwareT
 	return mgr.hardwareTypeStore.GetLoRaWANHardwareType(ctx, hardwareType)
 }
 
-// ListLoRaWANHardwareTypes lists all available LoRaWAN hardware types
+// ListLoRaWANHardwareTypes retrieves all available LoRaWAN hardware types.
 func (mgr *LoRaWANManager) ListLoRaWANHardwareTypes(ctx context.Context) ([]*iotv1.LoRaWANHardwareData, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "ListLoRaWANHardwareTypes")
 	defer span.End()
@@ -82,7 +83,7 @@ func (mgr *LoRaWANManager) ListLoRaWANHardwareTypes(ctx context.Context) ([]*iot
 	return mgr.hardwareTypeStore.ListLoRaWANHardwareTypes(ctx)
 }
 
-// UpdateLoRaWANHardwareType updates an existing LoRaWAN hardware type
+// UpdateLoRaWANHardwareType updates an existing LoRaWAN hardware type's metadata.
 func (mgr *LoRaWANManager) UpdateLoRaWANHardwareType(ctx context.Context, updateReq *iotv1.UpdateLoRaWANHardwareTypeRequest) (*iotv1.LoRaWANHardwareData, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "UpdateLoRaWANHardwareType")
 	defer span.End()
@@ -113,7 +114,7 @@ func (mgr *LoRaWANManager) UpdateLoRaWANHardwareType(ctx context.Context, update
 	return updatedHardwareData, nil
 }
 
-// DeleteLoRaWANHardwareType soft deletes a LoRaWAN hardware type by
+// DeleteLoRaWANHardwareType soft deletes a LoRaWAN hardware type by its ID.
 func (mgr *LoRaWANManager) DeleteLoRaWANHardwareType(ctx context.Context, hardwareType string) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "DeleteLoRaWANHardwareType")
 	defer span.End()

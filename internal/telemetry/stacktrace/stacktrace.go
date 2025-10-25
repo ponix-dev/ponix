@@ -5,18 +5,20 @@ import (
 	"log/slog"
 )
 
-// NewStackTraceErr starts a stack trace with the given inputs.  It can either be used
-// to generate a new custom error.
+// NewStackTraceErrorf creates a new formatted error with captured stack trace information
+// for enhanced observability in logs and traces.
 func NewStackTraceErrorf(format string, a ...any) error {
 	return new(fmt.Errorf(format, a...))
 }
 
-// NewStackTraceErr starts a stack trace with the given inputs.  It can be used
-// to wrap an existing error.
+// NewStackTraceError wraps an existing error with captured stack trace information
+// for enhanced observability in logs and traces.
 func NewStackTraceError(err error) error {
 	return new(err)
 }
 
+// ReplaceAttr is a slog handler function that enriches error attributes with stacktrace
+// information when logging errors to improve observability.
 func ReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 	switch a.Value.Kind() {
 	case slog.KindAny:

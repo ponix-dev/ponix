@@ -10,11 +10,13 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
+// UserOrganizationStore handles database operations for user-organization associations.
 type UserOrganizationStore struct {
 	queries *sqlc.Queries
 	db      *pgxpool.Pool
 }
 
+// NewUserOrganizationStore creates a new UserOrganizationStore instance.
 func NewUserOrganizationStore(queries *sqlc.Queries, db *pgxpool.Pool) *UserOrganizationStore {
 	return &UserOrganizationStore{
 		queries: queries,
@@ -22,6 +24,7 @@ func NewUserOrganizationStore(queries *sqlc.Queries, db *pgxpool.Pool) *UserOrga
 	}
 }
 
+// AddUserToOrganization adds a user to an organization with the specified role.
 func (uos *UserOrganizationStore) AddUserToOrganization(ctx context.Context, orgUser *organizationv1.OrganizationUser) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "AddUserToOrganization")
 	defer span.End()
@@ -38,6 +41,7 @@ func (uos *UserOrganizationStore) AddUserToOrganization(ctx context.Context, org
 	return nil
 }
 
+// RemoveUserFromOrganization removes a user from an organization.
 func (uos *UserOrganizationStore) RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "RemoveUserFromOrganization")
 	defer span.End()
@@ -52,6 +56,7 @@ func (uos *UserOrganizationStore) RemoveUserFromOrganization(ctx context.Context
 	return nil
 }
 
+// GetUserOrganizations retrieves all organization associations for a user.
 func (uos *UserOrganizationStore) GetUserOrganizations(ctx context.Context, userId string) ([]*organizationv1.OrganizationUser, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizations")
 	defer span.End()
@@ -73,6 +78,7 @@ func (uos *UserOrganizationStore) GetUserOrganizations(ctx context.Context, user
 	return orgUsers, nil
 }
 
+// GetOrganizationUsers retrieves all user associations for an organization.
 func (uos *UserOrganizationStore) GetOrganizationUsers(ctx context.Context, organizationID string) ([]*organizationv1.OrganizationUser, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetOrganizationUsers")
 	defer span.End()
@@ -94,6 +100,7 @@ func (uos *UserOrganizationStore) GetOrganizationUsers(ctx context.Context, orga
 	return orgUsers, nil
 }
 
+// IsUserInOrganization checks whether a user belongs to an organization.
 func (uos *UserOrganizationStore) IsUserInOrganization(ctx context.Context, userId, organizationId string) (bool, error) {
 	isMember, err := uos.queries.IsUserInOrganization(ctx, sqlc.IsUserInOrganizationParams{
 		UserID:         userId,
@@ -106,6 +113,7 @@ func (uos *UserOrganizationStore) IsUserInOrganization(ctx context.Context, user
 	return isMember, nil
 }
 
+// UpdateUserRole updates a user's role within an organization.
 func (uos *UserOrganizationStore) UpdateUserRole(ctx context.Context, userId, organizationId, role string) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "UpdateUserRole")
 	defer span.End()

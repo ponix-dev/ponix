@@ -16,6 +16,7 @@ import (
 // RunnerFunc is a function that takes in a context and returns a function that is configured to return when an error occurs or the passed in Context is finished.
 type RunnerFunc func(ctx context.Context) func() error
 
+// RunnerOption is a functional option for configuring a Runner instance.
 type RunnerOption func(*Runner)
 
 // WithAppProcess adds a RunnerFunc that will run until it returns an error or the application receives a SIGTERM signal from the host.
@@ -47,6 +48,8 @@ func WithLogger(l *slog.Logger) RunnerOption {
 	}
 }
 
+// WithContext configures the base context that will be used for the runner's app processes.
+// If not provided, the runner will use context.Background() as the default.
 func WithContext(ctx context.Context) RunnerOption {
 	return func(r *Runner) {
 		r.ctx = ctx
@@ -62,7 +65,9 @@ type Runner struct {
 	ctx          context.Context
 }
 
-// NewRunner takes in RunnerOptions and configures a Runner for application processes.  App processes and closers will be called in the order they are passed in.
+// New creates a new Runner instance configured with the provided options.
+// App processes and closers will be called in the order they are passed in.
+// The default configuration includes a 10-second closer timeout and stdout logging.
 func New(options ...RunnerOption) *Runner {
 	r := &Runner{
 		appProcesses: make([]RunnerFunc, 0),

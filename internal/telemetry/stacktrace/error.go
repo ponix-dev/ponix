@@ -7,12 +7,16 @@ import (
 	"sync"
 )
 
-// The maximum number of stackframes on any error.
+// MaxStackDepth defines the maximum number of stack frames captured when creating
+// a stacktrace error for observability purposes.
 const MaxStackDepth = 50
 
-// The amount of methods to remove from the beginning of the stack.  This helps remove calls to runtime package as well as calls in to the stacktrace package from the stack
+// StackSkipCount defines the number of stack frames to skip from the beginning of
+// the stack to exclude runtime and stacktrace package internal calls.
 const StackSkipCount = 3
 
+// Error wraps an error with captured stack frame information for enhanced error
+// observability and debugging in logs and traces.
 type Error struct {
 	Err          error
 	frames       *runtime.Frames
@@ -70,6 +74,8 @@ func (err *Error) StackTrace() []string {
 	return st
 }
 
+// ErrorAttribute creates a structured log attribute for the given error, suitable
+// for inclusion in OpenTelemetry log records.
 func ErrorAttribute(err error) slog.Attr {
 	return slog.Any("err", err)
 }
