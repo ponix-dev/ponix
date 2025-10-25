@@ -16,7 +16,7 @@ type ProcessedEnvelopeProducer interface {
 
 // ProcessedEnvelopeWriter persists ProcessedEnvelope messages to storage.
 type ProcessedEnvelopeWriter interface {
-	WriteProcessedEnvelope(ctx context.Context, envelope *envelopev1.ProcessedEnvelope) error
+	WriteProcessedEnvelope(ctx context.Context, envelope ...*envelopev1.ProcessedEnvelope) error
 }
 
 // DataEnvelopeService orchestrates the ingestion and processing of data envelopes.
@@ -50,11 +50,11 @@ func (srv *DataEnvelopeService) IngestDataEnvelope(ctx context.Context, envelope
 
 // IngestProcessedEnvelope receives a processed envelope and persists it via the writer.
 // This is typically called by a message consumer after receiving from the producer.
-func (srv *DataEnvelopeService) IngestProcessedEnvelope(ctx context.Context, envelope *envelopev1.ProcessedEnvelope) error {
+func (srv *DataEnvelopeService) IngestProcessedEnvelope(ctx context.Context, envelopes ...*envelopev1.ProcessedEnvelope) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "IngestProcessedEnvelope")
 	defer span.End()
 
-	err := srv.writer.WriteProcessedEnvelope(ctx, envelope)
+	err := srv.writer.WriteProcessedEnvelope(ctx, envelopes...)
 	if err != nil {
 		return err
 	}

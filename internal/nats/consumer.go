@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/ponix-dev/ponix/internal/runner"
@@ -28,20 +29,28 @@ func NewJetStreamConsumer(ctx context.Context, js jetstream.JetStream, streamNam
 // JetstreamConsumer defines the interface for consuming messages from JetStream.
 type JetstreamConsumer interface {
 	Consume(handler jetstream.MessageHandler, opts ...jetstream.PullConsumeOpt) (jetstream.ConsumeContext, error)
+	Fetch(batch int, opts ...jetstream.FetchOpt) (jetstream.MessageBatch, error)
 	CachedInfo() *jetstream.ConsumerInfo
 }
+
+// JetstreamMessageHandler is a function that processes a JetStream message and returns an error if processing fails.
+type JetstreamMessageHandler func(msgs ...jetstream.Msg) BatchResult
 
 // ConsumerHandler wraps a JetStream consumer and message handler for processing messages.
 type ConsumerHandler struct {
 	jsConsumer  JetstreamConsumer
 	handlerFunc JetstreamMessageHandler
+	batchSize   int
+	maxWait     time.Duration
 }
 
 // NewConsumerHandler creates a new consumer handler that processes messages using the provided handler function.
-func NewConsumerHandler(consumer JetstreamConsumer, handler JetstreamMessageHandler) (*ConsumerHandler, error) {
+func NewConsumerHandler(consumer JetstreamConsumer, handler JetstreamMessageHandler, batchSize int, maxWait time.Duration) (*ConsumerHandler, error) {
 	c := &ConsumerHandler{
 		jsConsumer:  consumer,
 		handlerFunc: handler,
+		batchSize:   batchSize,
+		maxWait:     maxWait,
 	}
 
 	return c, nil
@@ -60,50 +69,62 @@ func ConsumerRunner(handler *ConsumerHandler) runner.RunnerFunc {
 				slog.String("subject", streamInfo.Config.FilterSubject),
 			)
 
-			consumeCtx, err := handler.jsConsumer.Consume(ConsumerAckWrapper(handler.handlerFunc))
-			if err != nil {
-				return stacktrace.NewStackTraceError(err)
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				default:
+					batch, err := handler.jsConsumer.Fetch(
+						handler.batchSize,
+						jetstream.FetchMaxWait(handler.maxWait),
+					)
+					if err != nil {
+						return stacktrace.NewStackTraceError(err)
+					}
+
+					msgChan := batch.Messages()
+					msgs := []jetstream.Msg{}
+					for msg := range msgChan {
+						msgs = append(msgs, msg)
+					}
+
+					if batch.Error() != nil {
+						return stacktrace.NewStackTraceError(batch.Error())
+					}
+
+					result := handler.handlerFunc(msgs...)
+
+					AckMessages(result.AckMsgs)
+
+					if result.Error != nil {
+						NakMessages(result.NakMsgs)
+						return result.Error
+					}
+				}
 			}
-
-			<-ctx.Done()
-
-			consumeCtx.Drain()
-
-			return nil
 		}
 	}
 }
 
-// JetstreamMessageHandler is a function that processes a JetStream message and returns an error if processing fails.
-type JetstreamMessageHandler func(msg jetstream.Msg) error
-
-// ConsumerAckWrapper wraps a message handler to automatically ACK successful messages and NAK failed ones.
-func ConsumerAckWrapper(handlerFunc JetstreamMessageHandler) jetstream.MessageHandler {
-	return func(msg jetstream.Msg) {
-		err := handlerFunc(msg)
-		if err != nil {
-			slog.Error(
-				"Failed to process message",
-				slog.String("subject", msg.Subject()),
-				stacktrace.ErrorAttribute(err),
-			)
-
-			err = msg.Nak()
-			if err != nil {
-				slog.Error(
-					"failed to nak message",
-					slog.String("subject", msg.Subject()),
-					stacktrace.ErrorAttribute(err),
-				)
-			}
-
-			return
-		}
-
-		err = msg.Ack()
+func AckMessages(msgs []jetstream.Msg) {
+	for _, msg := range msgs {
+		err := msg.Ack()
 		if err != nil {
 			slog.Error(
 				"failed to ack message",
+				slog.String("subject", msg.Subject()),
+				stacktrace.ErrorAttribute(err),
+			)
+		}
+	}
+}
+
+func NakMessages(msgs []jetstream.Msg) {
+	for _, msg := range msgs {
+		err := msg.Nak()
+		if err != nil {
+			slog.Error(
+				"failed to nak message",
 				slog.String("subject", msg.Subject()),
 				stacktrace.ErrorAttribute(err),
 			)

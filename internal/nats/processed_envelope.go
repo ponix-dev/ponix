@@ -58,29 +58,49 @@ func (p *ProcessedEnvelopeProducer) ProduceProcessedEnvelope(ctx context.Context
 
 // ProcessedEnvelopeIngester defines the interface for processing received ProcessedEnvelope messages.
 type ProcessedEnvelopeIngester interface {
-	IngestProcessedEnvelope(ctx context.Context, envelope *envelopev1.ProcessedEnvelope) error
+	IngestProcessedEnvelope(ctx context.Context, envelopes ...*envelopev1.ProcessedEnvelope) error
 }
 
 // NewProcessedEnvelopeMessageHandler creates a JetStream message handler that unmarshals and processes ProcessedEnvelope messages.
 func NewProcessedEnvelopeMessageHandler(ingester ProcessedEnvelopeIngester) JetstreamMessageHandler {
-	return func(msg jetstream.Msg) error {
+	return func(msgs ...jetstream.Msg) BatchResult {
 		//TODO: this currently doesn't support tracing between producer and consumer
 		ctx, span := telemetry.Tracer().Start(context.Background(), "ProcessedEnvelopeConsumer")
 		defer span.End()
 
-		envelope := &envelopev1.ProcessedEnvelope{}
-		err := proto.Unmarshal(msg.Data(), envelope)
-		if err != nil {
-			span.RecordError(err)
-			return stacktrace.NewStackTraceError(err)
+		result := BatchResult{
+			AckMsgs: make([]jetstream.Msg, len(msgs)),
+			NakMsgs: make([]jetstream.Msg, len(msgs)),
+			Error:   nil,
 		}
 
-		err = ingester.IngestProcessedEnvelope(ctx, envelope)
-		if err != nil {
-			span.RecordError(err)
-			return stacktrace.NewStackTraceError(err)
+		envelopes := make([]*envelopev1.ProcessedEnvelope, 0, len(msgs))
+		for _, msg := range msgs {
+
+			envelope := &envelopev1.ProcessedEnvelope{}
+			err := proto.Unmarshal(msg.Data(), envelope)
+			if err != nil {
+				span.RecordError(err)
+				result.Error = stacktrace.NewStackTraceError(err)
+				result.NakMsgs = msgs
+
+				return result
+			}
+
+			envelopes = append(envelopes, envelope)
 		}
 
-		return nil
+		err := ingester.IngestProcessedEnvelope(ctx, envelopes...)
+		if err != nil {
+			span.RecordError(err)
+			result.Error = stacktrace.NewStackTraceError(err)
+			result.NakMsgs = msgs
+
+			return result
+		}
+
+		result.AckMsgs = msgs
+
+		return result
 	}
 }
