@@ -10,12 +10,14 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
+// OrganizationManager handles organization business operations.
 type OrganizationManager interface {
 	CreateOrganization(ctx context.Context, createReq *organizationv1.CreateOrganizationRequest) (*organizationv1.Organization, error)
 	GetOrganization(ctx context.Context, organizationReq *organizationv1.GetOrganizationRequest) (*organizationv1.Organization, error)
 	GetUserOrganizations(ctx context.Context, userId string) ([]*organizationv1.Organization, error)
 }
 
+// OrganizationAuthorizer checks permissions for organization operations.
 type OrganizationAuthorizer interface {
 	CanCreateOrganization(ctx context.Context, userId string) (bool, error)
 	CanReadOrganization(ctx context.Context, userId string, organizationId string) (bool, error)
@@ -23,11 +25,13 @@ type OrganizationAuthorizer interface {
 	CanDeleteOrganization(ctx context.Context, userId string, organizationId string) (bool, error)
 }
 
+// OrganizationHandler implements Connect RPC handlers for organization operations.
 type OrganizationHandler struct {
 	organizationManager OrganizationManager
 	authorizer          OrganizationAuthorizer
 }
 
+// NewOrganizationHandler creates a new OrganizationHandler with the provided dependencies.
 func NewOrganizationHandler(organizationManager OrganizationManager, authorizer OrganizationAuthorizer) *OrganizationHandler {
 	return &OrganizationHandler{
 		organizationManager: organizationManager,
@@ -35,6 +39,8 @@ func NewOrganizationHandler(organizationManager OrganizationManager, authorizer 
 	}
 }
 
+// CreateOrganization handles RPC requests to create a new organization.
+// Requires super admin privileges or create organization permission.
 func (handler *OrganizationHandler) CreateOrganization(ctx context.Context, req *connect.Request[organizationv1.CreateOrganizationRequest]) (*connect.Response[organizationv1.CreateOrganizationResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateOrganization")
 	defer span.End()
@@ -76,6 +82,8 @@ func (handler *OrganizationHandler) CreateOrganization(ctx context.Context, req 
 	return connect.NewResponse(response), nil
 }
 
+// GetOrganization handles RPC requests to retrieve an organization by ID.
+// Requires super admin privileges or read access to the organization.
 func (handler *OrganizationHandler) GetOrganization(ctx context.Context, req *connect.Request[organizationv1.GetOrganizationRequest]) (*connect.Response[organizationv1.GetOrganizationResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetOrganization")
 	defer span.End()
@@ -112,6 +120,8 @@ func (handler *OrganizationHandler) GetOrganization(ctx context.Context, req *co
 	return connect.NewResponse(response), nil
 }
 
+// GetUserOrganizations handles RPC requests to retrieve all organizations a user belongs to.
+// Users can only retrieve their own organizations unless they are a super admin.
 func (handler *OrganizationHandler) GetUserOrganizations(ctx context.Context, req *connect.Request[organizationv1.GetUserOrganizationsRequest]) (*connect.Response[organizationv1.GetUserOrganizationsResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizations")
 	defer span.End()

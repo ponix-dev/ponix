@@ -12,11 +12,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// OrganizationStore handles database operations for organizations.
 type OrganizationStore struct {
 	db   *sqlc.Queries
 	pool *pgxpool.Pool
 }
 
+// NewOrganizationStore creates a new OrganizationStore instance.
 func NewOrganizationStore(db *sqlc.Queries, pool *pgxpool.Pool) *OrganizationStore {
 	return &OrganizationStore{
 		db:   db,
@@ -24,6 +26,7 @@ func NewOrganizationStore(db *sqlc.Queries, pool *pgxpool.Pool) *OrganizationSto
 	}
 }
 
+// CreateOrganization inserts a new organization into the database.
 func (store *OrganizationStore) CreateOrganization(ctx context.Context, organization *organizationv1.Organization) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateOrganization")
 	defer span.End()
@@ -44,6 +47,7 @@ func (store *OrganizationStore) CreateOrganization(ctx context.Context, organiza
 	return nil
 }
 
+// GetOrganization retrieves an organization by ID from the database.
 func (store *OrganizationStore) GetOrganization(ctx context.Context, organizationID string) (*organizationv1.Organization, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetOrganization")
 	defer span.End()
@@ -62,6 +66,7 @@ func (store *OrganizationStore) GetOrganization(ctx context.Context, organizatio
 	}, nil
 }
 
+// GetUserOrganizationsWithDetails retrieves all organizations associated with a user, including full organization details.
 func (store *OrganizationStore) GetUserOrganizationsWithDetails(ctx context.Context, userId string) ([]*organizationv1.Organization, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetUserOrganizationsWithDetails")
 	defer span.End()

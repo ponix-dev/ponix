@@ -8,10 +8,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Mux wraps the chi router to provide HTTP request routing.
 type Mux struct {
 	chi.Router
 }
 
+// NewChiMux creates a new chi-based HTTP router with recovery middleware and a health endpoint.
 func NewChiMux() *Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
@@ -22,6 +24,7 @@ func NewChiMux() *Mux {
 	}
 }
 
+// Heartbeat creates an HTTP handler that responds to GET or HEAD requests at the specified endpoint.
 func Heartbeat(endpoint string) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if (r.Method == "GET" || r.Method == "HEAD") && strings.EqualFold(r.URL.Path, endpoint) {

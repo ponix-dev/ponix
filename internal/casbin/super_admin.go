@@ -9,19 +9,19 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
-// SuperAdminEnforcer handles super admin-specific authorization
+// SuperAdminEnforcer manages global super admin authorization privileges.
 type SuperAdminEnforcer struct {
 	enforcer *casbin.Enforcer
 }
 
-// NewSuperAdminEnforcer creates a new super admin enforcer
+// NewSuperAdminEnforcer creates a new super admin enforcer instance.
 func NewSuperAdminEnforcer(enforcer *casbin.Enforcer) *SuperAdminEnforcer {
 	return &SuperAdminEnforcer{
 		enforcer: enforcer,
 	}
 }
 
-// AddSuperAdmin assigns a user global super admin privileges
+// AddSuperAdmin grants a user global super admin privileges across all organizations.
 func (e *SuperAdminEnforcer) AddSuperAdmin(ctx context.Context, userId string) error {
 	_, span := telemetry.Tracer().Start(ctx, "AddSuperAdmin")
 	defer span.End()
@@ -34,7 +34,7 @@ func (e *SuperAdminEnforcer) AddSuperAdmin(ctx context.Context, userId string) e
 	return e.enforcer.SavePolicy()
 }
 
-// IsSuperAdmin checks if a user has super admin privileges
+// IsSuperAdmin checks if a user has global super admin privileges.
 func (e *SuperAdminEnforcer) IsSuperAdmin(user string) (bool, error) {
 	_, span := telemetry.Tracer().Start(context.Background(), "IsSuperAdmin")
 	defer span.End()

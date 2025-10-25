@@ -12,11 +12,13 @@ import (
 	"github.com/rs/xid"
 )
 
+// EndDeviceStore handles database operations for end devices and LoRaWAN configurations.
 type EndDeviceStore struct {
 	db   *sqlc.Queries
 	pool *pgxpool.Pool
 }
 
+// NewEndDeviceStore creates a new EndDeviceStore instance.
 func NewEndDeviceStore(db *sqlc.Queries, pool *pgxpool.Pool) *EndDeviceStore {
 	return &EndDeviceStore{
 		db:   db,
@@ -24,6 +26,8 @@ func NewEndDeviceStore(db *sqlc.Queries, pool *pgxpool.Pool) *EndDeviceStore {
 	}
 }
 
+// AddEndDevice inserts a new end device and its associated configuration into the database.
+// For LoRaWAN devices, this also creates the corresponding LoRaWAN configuration within a transaction.
 func (store *EndDeviceStore) AddEndDevice(ctx context.Context, endDevice *iotv1.EndDevice, organizationID string) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
@@ -86,7 +90,7 @@ func (store *EndDeviceStore) AddEndDevice(ctx context.Context, endDevice *iotv1.
 	return nil
 }
 
-// GetLoRaWANHardwareType retrieves a LoRaWAN hardware type by ID
+// GetLoRaWANHardwareType retrieves a LoRaWAN hardware type by ID from the database.
 func (store *EndDeviceStore) GetLoRaWANHardwareType(ctx context.Context, hardwareTypeID string) (*iotv1.LoRaWANHardwareData, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetLoRaWANHardwareType")
 	defer span.End()
@@ -112,7 +116,7 @@ func (store *EndDeviceStore) GetLoRaWANHardwareType(ctx context.Context, hardwar
 	return hardwareDataBuilder.Build(), nil
 }
 
-// GetCompleteLoRaWANDevice retrieves a complete LoRaWAN device with its configuration
+// GetCompleteLoRaWANDevice retrieves a complete LoRaWAN device with its configuration from the database.
 func (store *EndDeviceStore) GetCompleteLoRaWANDevice(ctx context.Context, endDeviceID string) (*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetCompleteLoRaWANDevice")
 	defer span.End()
@@ -133,7 +137,7 @@ func (store *EndDeviceStore) GetCompleteLoRaWANDevice(ctx context.Context, endDe
 	return endDeviceBuilder.Build(), nil
 }
 
-// ListEndDevicesByOrganization lists all end devices for an organization
+// ListEndDevicesByOrganization retrieves all end devices belonging to an organization from the database.
 func (store *EndDeviceStore) ListEndDevicesByOrganization(ctx context.Context, organizationID string) ([]*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "ListEndDevicesByOrganization")
 	defer span.End()
@@ -159,7 +163,7 @@ func (store *EndDeviceStore) ListEndDevicesByOrganization(ctx context.Context, o
 	return endDevices, nil
 }
 
-// AddLoRaWANHardwareType creates a new LoRaWAN hardware type
+// AddLoRaWANHardwareType inserts a new LoRaWAN hardware type into the database.
 func (store *EndDeviceStore) AddLoRaWANHardwareType(ctx context.Context, hardwareData *iotv1.LoRaWANHardwareData) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "AddLoRaWANHardwareType")
 	defer span.End()
@@ -184,7 +188,7 @@ func (store *EndDeviceStore) AddLoRaWANHardwareType(ctx context.Context, hardwar
 	return nil
 }
 
-// ListLoRaWANHardwareTypes lists all available LoRaWAN hardware types
+// ListLoRaWANHardwareTypes retrieves all available LoRaWAN hardware types from the database.
 func (store *EndDeviceStore) ListLoRaWANHardwareTypes(ctx context.Context) ([]*iotv1.LoRaWANHardwareData, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "ListLoRaWANHardwareTypes")
 	defer span.End()
@@ -214,7 +218,7 @@ func (store *EndDeviceStore) ListLoRaWANHardwareTypes(ctx context.Context) ([]*i
 	return hardwareTypes, nil
 }
 
-// UpdateLoRaWANHardwareType updates an existing LoRaWAN hardware type
+// UpdateLoRaWANHardwareType updates an existing LoRaWAN hardware type in the database.
 func (store *EndDeviceStore) UpdateLoRaWANHardwareType(ctx context.Context, hardwareData *iotv1.LoRaWANHardwareData) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "UpdateLoRaWANHardwareType")
 	defer span.End()
@@ -239,7 +243,7 @@ func (store *EndDeviceStore) UpdateLoRaWANHardwareType(ctx context.Context, hard
 	return nil
 }
 
-// DeleteLoRaWANHardwareType deletes a LoRaWAN hardware type by ID
+// DeleteLoRaWANHardwareType deletes a LoRaWAN hardware type by ID from the database.
 func (store *EndDeviceStore) DeleteLoRaWANHardwareType(ctx context.Context, hardwareTypeID string) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "DeleteLoRaWANHardwareType")
 	defer span.End()

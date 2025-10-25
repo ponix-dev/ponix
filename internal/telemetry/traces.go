@@ -14,6 +14,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// NewPropagator creates and registers a TraceContext propagator for distributed tracing
+// context propagation across service boundaries.
 func NewPropagator() propagation.TextMapPropagator {
 	p := propagation.TraceContext{}
 	otel.SetTextMapPropagator(p)
@@ -21,6 +23,8 @@ func NewPropagator() propagation.TextMapPropagator {
 	return p
 }
 
+// NewTracerProvider creates and configures an OpenTelemetry tracer provider with OTLP
+// HTTP exporter for distributed tracing. Traces are batched for efficient export.
 func NewTracerProvider(ctx context.Context, resource *resource.Resource) (*sdktrace.TracerProvider, error) {
 	exporter, err := otlptrace.New(ctx, otlptracehttp.NewClient(otlptracehttp.WithInsecure()))
 	if err != nil {
@@ -35,6 +39,8 @@ func NewTracerProvider(ctx context.Context, resource *resource.Resource) (*sdktr
 	return tp, nil
 }
 
+// TracerProviderCloser returns a runner function that gracefully shuts down the tracer
+// provider, flushing any pending trace spans before termination.
 func TracerProviderCloser(tp *sdktrace.TracerProvider) runner.RunnerFunc {
 	return func(ctx context.Context) func() error {
 		return func() error {
@@ -43,10 +49,14 @@ func TracerProviderCloser(tp *sdktrace.TracerProvider) runner.RunnerFunc {
 	}
 }
 
+// SetServiceTracer registers the given tracer provider as the global OpenTelemetry
+// tracer provider for the application.
 func SetServiceTracer(tracerProvider trace.TracerProvider) {
 	otel.SetTracerProvider(tracerProvider)
 }
 
+// Tracer returns an OpenTelemetry tracer configured with the instrumentation name and
+// semantic conventions schema for recording trace spans.
 func Tracer() trace.Tracer {
 	return otel.GetTracerProvider().Tracer(
 		instrumentationName,

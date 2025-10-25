@@ -18,8 +18,10 @@ import (
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
+// TTNRegion represents a The Things Network cloud region identifier.
 type TTNRegion string
 
+// Application represents a TTN application with its basic metadata.
 type Application struct {
 	Id          string
 	Name        string
@@ -27,15 +29,21 @@ type Application struct {
 }
 
 const (
-	TTNRegionEU    TTNRegion = "eu1"
-	TTNRegionNam   TTNRegion = "nam1"
+	// TTNRegionEU represents The Things Network European cloud region.
+	TTNRegionEU TTNRegion = "eu1"
+	// TTNRegionNam represents The Things Network North American cloud region.
+	TTNRegionNam TTNRegion = "nam1"
+	// TTNRegionLocal represents a local The Things Stack deployment.
 	TTNRegionLocal TTNRegion = "local"
 )
 
+// String returns the string representation of the TTN region.
 func (region TTNRegion) String() string {
 	return string(region)
 }
 
+// TTNClient provides integration with The Things Network for LoRaWAN device and application management.
+// It manages gRPC connections to TTN's Identity, Application, Gateway, Network, and Join Servers.
 type TTNClient struct {
 	ServerName               string
 	Region                   TTNRegion
@@ -52,20 +60,24 @@ type TTNClient struct {
 	endDeviceRegistryClient  lorawanv3grpc.EndDeviceRegistryClient
 }
 
+// TTNClientOption is a functional option for configuring a TTNClient.
 type TTNClientOption func(*TTNClient)
 
+// WithServerName configures the TTN server name for the client.
 func WithServerName(name string) TTNClientOption {
 	return func(t *TTNClient) {
 		t.ServerName = name
 	}
 }
 
+// WithRegion configures the TTN cloud region for the client.
 func WithRegion(region TTNRegion) TTNClientOption {
 	return func(t *TTNClient) {
 		t.Region = region
 	}
 }
 
+// WithCollaboratorApiKey configures the API key and collaborator identifier for TTN authentication.
 func WithCollaboratorApiKey(key string, collab string) TTNClientOption {
 	return func(t *TTNClient) {
 		t.ApiKey = key
@@ -75,6 +87,8 @@ func WithCollaboratorApiKey(key string, collab string) TTNClientOption {
 
 // TODO: implement address options
 
+// NewTTNClient creates a new TTN client with the specified options.
+// It establishes gRPC connections to the appropriate TTN servers based on the configured region.
 func NewTTNClient(opts ...TTNClientOption) (*TTNClient, error) {
 	ttnClient := &TTNClient{
 		Region:    TTNRegionLocal,
@@ -231,6 +245,8 @@ func grpcConn(address string) (conn *grpc.ClientConn, err error) {
 // 	return gws, nil
 // }
 
+// RegisterEndDevice registers a LoRaWAN end device with The Things Network.
+// It configures the device with OTAA activation, frequency plan, and hardware version information.
 func (ttnClient *TTNClient) RegisterEndDevice(ctx context.Context, endDevice *iotv1.EndDevice) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
@@ -310,6 +326,7 @@ func (ttnClient *TTNClient) RegisterEndDevice(ctx context.Context, endDevice *io
 	return nil
 }
 
+// ListEndDevices retrieves all LoRaWAN end devices registered under a specific TTN application.
 func (ttnClient *TTNClient) ListEndDevices(ctx context.Context, applicationId string) ([]*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "ListEndDevices")
 	defer span.End()
@@ -344,6 +361,7 @@ func (ttnClient *TTNClient) ListEndDevices(ctx context.Context, applicationId st
 	return devices, nil
 }
 
+// ListApplications retrieves all TTN applications accessible to the configured collaborator.
 func (ttnClient *TTNClient) ListApplications(ctx context.Context) ([]*Application, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "ListApplications")
 	defer span.End()

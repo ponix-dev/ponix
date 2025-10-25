@@ -9,6 +9,7 @@ import (
 	"github.com/ponix-dev/ponix/internal/runner"
 )
 
+// NewRunner creates a runner function that starts the HTTP server and listens for context cancellation.
 func NewRunner(srv *Server) runner.RunnerFunc {
 	return func(ctx context.Context) func() error {
 		return func() error {
@@ -34,6 +35,7 @@ func NewRunner(srv *Server) runner.RunnerFunc {
 	}
 }
 
+// NewCloser creates a runner function that performs graceful shutdown of the HTTP server.
 func NewCloser(srv *Server) runner.RunnerFunc {
 	return func(ctx context.Context) func() error {
 		return func() error {

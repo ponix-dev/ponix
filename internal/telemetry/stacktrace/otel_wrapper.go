@@ -7,6 +7,8 @@ import (
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
+// otelHandlerWrapper wraps an OpenTelemetry slog handler to enhance error logging
+// with stacktrace attributes for improved observability.
 type otelHandlerWrapper struct {
 	*otelslog.Handler
 }

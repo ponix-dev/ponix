@@ -8,6 +8,7 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
+// Adapter defines the interface for persisting authorization policies.
 type Adapter interface {
 	// LoadPolicy loads all policy rules from the storage.
 	LoadPolicy(model model.Model) error
@@ -25,7 +26,7 @@ type Adapter interface {
 	RemoveFilteredPolicy(sec string, ptype string, fieldIndex int, fieldValues ...string) error
 }
 
-// NewEnforcer creates a new Casbin enforcer with the organization model and pgx adapter
+// NewEnforcer creates a new Casbin enforcer with the RBAC model and initializes default policies.
 func NewEnforcer(ctx context.Context, a Adapter) (*casbin.Enforcer, error) {
 	m := initializeModel()
 

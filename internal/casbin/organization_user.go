@@ -11,19 +11,19 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
-// OrganizationEnforcer handles organization-specific authorization
+// OrganizationEnforcer manages user roles and permissions within organizations.
 type OrganizationEnforcer struct {
 	enforcer *casbin.Enforcer
 }
 
-// NewOrganizationEnforcer creates a new organization enforcer
+// NewOrganizationEnforcer creates a new organization enforcer instance.
 func NewOrganizationEnforcer(enforcer *casbin.Enforcer) *OrganizationEnforcer {
 	return &OrganizationEnforcer{
 		enforcer: enforcer,
 	}
 }
 
-// AddUserToOrganization assigns a user to a role within an organization (idempotent)
+// AddUserToOrganization assigns a user to a role within an organization with appropriate permissions.
 func (e *OrganizationEnforcer) AddUserToOrganization(ctx context.Context, orgUser *organizationv1.OrganizationUser) error {
 	_, span := telemetry.Tracer().Start(ctx, "addUserToOrganization")
 	defer span.End()
@@ -112,7 +112,7 @@ func (e *OrganizationEnforcer) addOrgSpecificPolicies(role domain.OrganizationRo
 	return nil
 }
 
-// CanCreateUsers checks if a user can create other users within an organization
+// CanCreateUsers checks if a user has permission to create other users within an organization.
 func (e *OrganizationEnforcer) CanCreateUsers(ctx context.Context, user string, organization string) (bool, error) {
 	_, span := telemetry.Tracer().Start(ctx, "CanCreateUsers")
 	defer span.End()
@@ -120,7 +120,7 @@ func (e *OrganizationEnforcer) CanCreateUsers(ctx context.Context, user string, 
 	return e.enforcer.Enforce(user, "user", "create", organization)
 }
 
-// CanReadUsers checks if a user can read other users within an organization
+// CanReadUsers checks if a user has permission to read other users within an organization.
 func (e *OrganizationEnforcer) CanReadUsers(ctx context.Context, user string, organization string) (bool, error) {
 	_, span := telemetry.Tracer().Start(ctx, "CanReadUsers")
 	defer span.End()
@@ -128,7 +128,7 @@ func (e *OrganizationEnforcer) CanReadUsers(ctx context.Context, user string, or
 	return e.enforcer.Enforce(user, "user", "read", organization)
 }
 
-// CanUpdateUsers checks if a user can update other users within an organization
+// CanUpdateUsers checks if a user has permission to update other users within an organization.
 func (e *OrganizationEnforcer) CanUpdateUsers(ctx context.Context, user string, organization string) (bool, error) {
 	_, span := telemetry.Tracer().Start(ctx, "CanUpdateUsers")
 	defer span.End()
@@ -136,7 +136,7 @@ func (e *OrganizationEnforcer) CanUpdateUsers(ctx context.Context, user string, 
 	return e.enforcer.Enforce(user, "user", "update", organization)
 }
 
-// CanDeleteUsers checks if a user can delete other users within an organization
+// CanDeleteUsers checks if a user has permission to delete other users within an organization.
 func (e *OrganizationEnforcer) CanDeleteUsers(ctx context.Context, user string, organization string) (bool, error) {
 	_, span := telemetry.Tracer().Start(ctx, "CanDeleteUsers")
 	defer span.End()
@@ -144,7 +144,7 @@ func (e *OrganizationEnforcer) CanDeleteUsers(ctx context.Context, user string, 
 	return e.enforcer.Enforce(user, "user", "delete", organization)
 }
 
-// UpdateUserRole updates a user's role within an organization
+// UpdateUserRole changes a user's role and permissions within an organization.
 func (e *OrganizationEnforcer) UpdateUserRole(ctx context.Context, userId, organizationId, role string) error {
 	_, span := telemetry.Tracer().Start(ctx, "UpdateUserRole")
 	defer span.End()
@@ -181,7 +181,7 @@ func (e *OrganizationEnforcer) UpdateUserRole(ctx context.Context, userId, organ
 	return e.enforcer.SavePolicy()
 }
 
-// RemoveUserFromOrganization removes all user roles within an organization (idempotent)
+// RemoveUserFromOrganization revokes all user permissions within an organization.
 func (e *OrganizationEnforcer) RemoveUserFromOrganization(ctx context.Context, userId, organizationId string) error {
 	_, span := telemetry.Tracer().Start(ctx, "RemoveUserFromOrganization")
 	defer span.End()

@@ -8,6 +8,7 @@ import (
 	"github.com/ponix-dev/ponix/internal/domain"
 )
 
+// SuperAdminer checks whether a user has super admin privileges.
 type SuperAdminer interface {
 	IsSuperAdmin(user string) (bool, error)
 }
@@ -25,7 +26,9 @@ func AuthenticationInterceptor() connect.UnaryInterceptorFunc {
 	}
 }
 
-// SuperAdminInterceptor checks if the user is a super admin and sets the context accordingly
+// SuperAdminInterceptor creates an interceptor that checks if the authenticated user has super admin privileges.
+// If the user is a super admin, it enriches the request context with super admin status.
+// This enables handlers to bypass organization-level authorization checks for administrative operations.
 func SuperAdminInterceptor(enforcer SuperAdminer) connect.UnaryInterceptorFunc {
 	return func(uf connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -50,8 +53,9 @@ func SuperAdminInterceptor(enforcer SuperAdminer) connect.UnaryInterceptorFunc {
 	}
 }
 
-// GetOrganizationFromRequest extracts organization ID from requests
-// This is now a helper function for handlers to use directly
+// GetOrganizationFromRequest extracts the organization ID from RPC request messages.
+// It attempts to extract the organization ID from common field names (OrganizationId, Organization).
+// Returns an empty string if the organization ID cannot be extracted from the request.
 func GetOrganizationFromRequest(req any) string {
 	// Try to extract from the request message
 	switch msg := req.(type) {

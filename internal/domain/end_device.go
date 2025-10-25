@@ -8,15 +8,18 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
+// EndDeviceRegister defines the operations for registering devices with external systems.
 type EndDeviceRegister interface {
 	RegisterEndDevice(ctx context.Context, endDevice *iotv1.EndDevice) error
 }
 
+// EndDeviceStorer defines the persistence operations for end devices.
 type EndDeviceStorer interface {
 	AddEndDevice(ctx context.Context, endDevice *iotv1.EndDevice, organizationId string) error
 	GetLoRaWANHardwareType(ctx context.Context, hardwareTypeId string) (*iotv1.LoRaWANHardwareData, error)
 }
 
+// EndDeviceManager orchestrates end device business logic including creation and external registration.
 type EndDeviceManager struct {
 	endDeviceStore    EndDeviceStorer
 	endDeviceRegister EndDeviceRegister
@@ -25,6 +28,7 @@ type EndDeviceManager struct {
 	validate          Validate
 }
 
+// NewEndDeviceManager creates a new instance of EndDeviceManager with the provided dependencies.
 func NewEndDeviceManager(eds EndDeviceStorer, edr EndDeviceRegister, applicationId string, stringId StringId, validate Validate) *EndDeviceManager {
 	return &EndDeviceManager{
 		endDeviceStore:    eds,
@@ -35,6 +39,7 @@ func NewEndDeviceManager(eds EndDeviceStorer, edr EndDeviceRegister, application
 	}
 }
 
+// CreateEndDevice creates a new end device, registers it with external systems if needed, and persists it.
 func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest, organizationId string) (*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateEndDevice")
 	defer span.End()
@@ -69,7 +74,7 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iot
 	return endDevice, nil
 }
 
-// buildEndDeviceFromRequest constructs a complete EndDevice from CreateEndDeviceRequest
+// buildEndDeviceFromRequest constructs a complete EndDevice from the request including hardware-specific configuration.
 func (mgr *EndDeviceManager) buildEndDeviceFromRequest(ctx context.Context, endDeviceId string, createReq *iotv1.CreateEndDeviceRequest) (*iotv1.EndDevice, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "buildEndDeviceFromRequest")
 	defer span.End()
@@ -99,7 +104,7 @@ func (mgr *EndDeviceManager) buildEndDeviceFromRequest(ctx context.Context, endD
 	return endDeviceBuilder.Build(), nil
 }
 
-// buildLoRaWANConfig constructs LoRaWAN configuration with hardware data from database
+// buildLoRaWANConfig constructs a complete LoRaWAN configuration including device identifiers, keys, and hardware data.
 func (mgr *EndDeviceManager) buildLoRaWANConfig(ctx context.Context, createReq *iotv1.CreateEndDeviceRequest) (*iotv1.LoRaWANConfig, error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "buildLoRaWANConfig")
 	defer span.End()
@@ -125,24 +130,26 @@ func (mgr *EndDeviceManager) buildLoRaWANConfig(ctx context.Context, createReq *
 	return lorawanConfigBuilder.Build(), nil
 }
 
-// Placeholder functions for generating LoRaWAN identifiers
-// TODO: Implement proper Id generation logic
+// generateDeviceEUI generates a unique 64-bit device EUI (16 hex characters).
+// TODO: Implement proper cryptographically secure ID generation.
 func generateDeviceEUI() string {
-	// Generate unique 64-bit device EUI (16 hex chars)
 	return "0123456789ABCDEF"
 }
 
+// generateApplicationEUI generates a 64-bit application EUI (16 hex characters).
+// TODO: Implement proper cryptographically secure ID generation.
 func generateApplicationEUI() string {
-	// Generate or use default 64-bit application EUI (16 hex chars)
 	return "FEDCBA9876543210"
 }
 
+// generateApplicationKey generates a 128-bit application key (32 hex characters).
+// TODO: Implement proper cryptographically secure key generation.
 func generateApplicationKey() string {
-	// Generate 128-bit application key (32 hex chars)
 	return "00112233445566778899AABBCCDDEEFF"
 }
 
+// generateNetworkKey generates a 128-bit network key (32 hex characters).
+// TODO: Implement proper cryptographically secure key generation.
 func generateNetworkKey() string {
-	// Generate 128-bit network key (32 hex chars)
 	return "FFEEDDCCBBAA99887766554433221100"
 }

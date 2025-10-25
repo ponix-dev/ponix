@@ -11,26 +11,31 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
+// HttpServer defines the interface for starting and stopping an HTTP server.
 type HttpServer interface {
 	ListenAndServe() error
 	Shutdown(context.Context) error
 }
 
+// ServeMux defines the interface for HTTP request routing and handling.
 type ServeMux interface {
 	Handle(pattern string, handler http.Handler)
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
+// ErrNoServerPort is returned when no port is specified for the HTTP server.
 var (
 	ErrNoServerPort = errors.New("http server address needs a port")
 )
 
+// Server manages the HTTP server lifecycle and configuration.
 type Server struct {
 	port       string
 	logger     *slog.Logger
 	httpServer HttpServer
 }
 
+// ServerOption is a function that configures a Server.
 type ServerOption func(config *serverOptionConfig)
 
 type serverOptionConfig struct {
@@ -41,6 +46,7 @@ type serverOptionConfig struct {
 	logger      *slog.Logger
 }
 
+// WithPort configures the HTTP server to listen on the specified port.
 func WithPort(port string) ServerOption {
 	return func(config *serverOptionConfig) {
 		config.port = port
@@ -48,12 +54,14 @@ func WithPort(port string) ServerOption {
 	}
 }
 
+// WithLogger configures the HTTP server to use the specified logger.
 func WithLogger(lgr *slog.Logger) ServerOption {
 	return func(srv *serverOptionConfig) {
 		srv.logger = lgr
 	}
 }
 
+// WithHandler registers an HTTP handler at the specified path.
 func WithHandler(path string, handler http.Handler) ServerOption {
 	return func(srv *serverOptionConfig) {
 		srv.logger.Info("registering handler", slog.String("path", path))
@@ -75,6 +83,7 @@ func WithHttp2Server(server *http2.Server) ServerOption {
 	}
 }
 
+// New creates a new HTTP server with the provided mux and options.
 func New(mux ServeMux, options ...ServerOption) (*Server, error) {
 	if mux == nil {
 		mux = http.NewServeMux()

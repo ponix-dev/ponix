@@ -10,21 +10,25 @@ import (
 	"github.com/ponix-dev/ponix/internal/telemetry"
 )
 
+// UserManager handles user business operations.
 type UserManager interface {
 	CreateUser(ctx context.Context, createReq *organizationv1.CreateUserRequest) (*organizationv1.User, error)
 	GetUser(ctx context.Context, userReq *organizationv1.GetUserRequest) (*organizationv1.User, error)
 }
 
+// UserAuthorizer checks permissions for user operations.
 type UserAuthorizer interface {
 	CanReadSelf(ctx context.Context, userId, targetUserId string) (bool, error)
 	CanUpdateSelf(ctx context.Context, userId, targetUserId string) (bool, error)
 }
 
+// UserHandler implements Connect RPC handlers for user operations.
 type UserHandler struct {
 	userManager UserManager
 	authorizer  UserAuthorizer
 }
 
+// NewUserHandler creates a new UserHandler with the provided dependencies.
 func NewUserHandler(userManager UserManager, authorizer UserAuthorizer) *UserHandler {
 	return &UserHandler{
 		userManager: userManager,
@@ -32,6 +36,8 @@ func NewUserHandler(userManager UserManager, authorizer UserAuthorizer) *UserHan
 	}
 }
 
+// CreateUser handles RPC requests to create a new user.
+// This operation is restricted to super admins only.
 func (handler *UserHandler) CreateUser(ctx context.Context, req *connect.Request[organizationv1.CreateUserRequest]) (*connect.Response[organizationv1.CreateUserResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "CreateUser")
 	defer span.End()
@@ -62,6 +68,8 @@ func (handler *UserHandler) CreateUser(ctx context.Context, req *connect.Request
 	return connect.NewResponse(response), nil
 }
 
+// GetUser handles RPC requests to retrieve a user by ID.
+// Users can retrieve their own data, super admins can retrieve any user.
 func (handler *UserHandler) GetUser(ctx context.Context, req *connect.Request[organizationv1.GetUserRequest]) (*connect.Response[organizationv1.GetUserResponse], error) {
 	ctx, span := telemetry.Tracer().Start(ctx, "GetUser")
 	defer span.End()
