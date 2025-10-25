@@ -5,7 +5,7 @@ go 1.24
 require (
 	ariga.io/atlas-go-sdk v0.6.5
 	buf.build/gen/go/ponix/ponix/connectrpc/go v1.18.1-20250717020822-cf520a38608f.1
-	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.6-20250717020822-cf520a38608f.1
+	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251025155912-0ebc370c6b2e.1
 	buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2
 	buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1
 	connectrpc.com/connect v1.18.1
@@ -35,12 +35,12 @@ require (
 	golang.org/x/net v0.41.0
 	golang.org/x/sync v0.16.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
 	ariga.io/atlas v0.29.1 // indirect
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20241127180247-a33202765966.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.10-20241127180247-a33202765966.1 // indirect
 	buf.build/gen/go/envoyproxy/protoc-gen-validate/protocolbuffers/go v1.36.2-20221025150516-6607b10f00ed.1 // indirect
 	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.2-20230727201445-fed2dcdcfd69.1 // indirect
 	buf.build/gen/go/thethingsindustries/protoc-gen-go-flags/protocolbuffers/go v1.36.2-20230804123531-52b4cd8b1852.1 // indirect
@@ -58,7 +58,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/inflect v0.21.0 // indirect
 	github.com/google/cel-go v0.22.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.25.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
