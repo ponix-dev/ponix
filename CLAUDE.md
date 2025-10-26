@@ -11,7 +11,7 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 - Go 1.24
 - Connect-RPC (gRPC-compatible) with Protocol Buffers
 - PostgreSQL with sqlc for type-safe SQL
-- Atlas for database migrations
+- Goose for database migrations
 - Casbin for RBAC authorization
 - OpenTelemetry for observability (logs, metrics, traces)
 - Chi router for HTTP routing
@@ -25,7 +25,7 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 - `mage stack:up` - Start all Docker dependencies (PostgreSQL, NATS, InfluxDB, Grafana, etc.)
 - `mage stack:down` - Stop all Docker dependencies
 - `mage db:gen` - Generate database code with sqlc (run after modifying SQL files)
-- `mage db:migrate <name>` - Create new database migration with Atlas
+- `mage db:migrate <name>` - Create new database migration with Goose
 
 ### Standard Go Commands
 - `go run ./cmd/ponix-all-in-one` - Run the main application
@@ -43,7 +43,7 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 5. Run `mage db:gen` to regenerate type-safe Go code
 
 **File Locations:**
-- Migrations: `internal/postgres/atlas/`
+- Migrations: `internal/postgres/goose/`
 - Generated code: `internal/postgres/sqlc/`
 - Schema definition: `schema/schema.sql`
 - Query files: `schema/*.sql`
@@ -56,7 +56,7 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 ├─ internal/connectrpc/          RPC handlers (API layer)
 ├─ internal/domain/              Business logic and domain models
 ├─ internal/postgres/            Data persistence layer
-│  ├─ atlas/                    Database migrations
+│  ├─ goose/                    Database migrations
 │  └─ sqlc/                     Generated type-safe queries
 ├─ internal/casbin/              Authorization enforcement
 └─ internal/telemetry/           OpenTelemetry instrumentation

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"os"
 
@@ -11,10 +12,12 @@ import (
 	"connectrpc.com/validate"
 
 	"github.com/ponix-dev/ponix/internal/casbin"
+	"github.com/ponix-dev/ponix/internal/clickhouse"
 	"github.com/ponix-dev/ponix/internal/conf"
 	"github.com/ponix-dev/ponix/internal/connectrpc"
 	"github.com/ponix-dev/ponix/internal/domain"
 	"github.com/ponix-dev/ponix/internal/mux"
+	"github.com/ponix-dev/ponix/internal/nats"
 	"github.com/ponix-dev/ponix/internal/postgres"
 	"github.com/ponix-dev/ponix/internal/postgres/sqlc"
 	"github.com/ponix-dev/ponix/internal/protobuf"
@@ -32,7 +35,7 @@ func main() {
 	logger := slog.Default()
 	ctx := context.Background()
 
-	cfg, err := conf.GetConfig[conf.ManagementConfig](ctx)
+	cfg, err := conf.GetConfig[conf.AllInOne](ctx)
 	if err != nil {
 		logger.Error("could not get config", slog.Any("err", err))
 		os.Exit(1)
@@ -75,6 +78,11 @@ func main() {
 		postgres.WithPassword(cfg.DatabasePassword),
 	)
 
+	err = postgres.RunMigrations(ctx, string(curl))
+	if err != nil {
+		logger.Error("could not run postgres migrations", slog.Any("err", err))
+		os.Exit(1)
+	}
 	dbpool, err := postgres.NewPool(ctx, curl)
 	if err != nil {
 		logger.Error("could not create db pool", slog.Any("err", err))
@@ -116,6 +124,55 @@ func main() {
 	if err != nil {
 		logger.Error("could not create ttn client", slog.Any("err", err))
 		os.Exit(1)
+	}
+
+	churl := clickhouse.NewUrl(cfg.ClickHouseDB, cfg.ClickHouseUser, cfg.ClickHousePass, cfg.ClickHouseAddr)
+	err = clickhouse.RunMigrations(ctx, churl)
+	if err != nil {
+		logger.Error("could not run clickhouse migrations", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	clickhouseConn, err := clickhouse.NewConnection(ctx, cfg.ClickHouseDB, cfg.ClickHouseUser, cfg.ClickHousePass, cfg.ClickHouseAddr)
+	if err != nil {
+		logger.Error("could not create clickhouse connection", slog.Any("err", err))
+		os.Exit(1)
+	}
+
+	envelopeStore := clickhouse.NewEnvelopeStore(clickhouseConn, cfg.ClickHouseProcessedEnvelopeTable)
+
+	natsConnection, err := nats.NewConnection(
+		nats.WithURL(cfg.NatsURL),
+		nats.WithName("serviceName"),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to NATS: %v", err)
+	}
+
+	jetstreamClient, err := nats.NewJetStream(natsConnection)
+	if err != nil {
+		log.Fatalf("Failed to create JetStream connection: %v", err)
+	}
+
+	//TODO: don't have this do hardcoded setup, use config values
+	err = nats.SetupJetStream(ctx, jetstreamClient)
+	if err != nil {
+		log.Fatalf("Failed to setup JetStream: %v", err)
+	}
+
+	processedEnvelopeProducer := nats.NewProcessedEnvelopeProducer(jetstreamClient, cfg.NatsProcessedEnvelopeStream)
+
+	envelopeManager := domain.NewDataEnvelopeManager(processedEnvelopeProducer, envelopeStore)
+
+	messageHandler := nats.NewProcessedEnvelopeMessageHandler(envelopeManager)
+	consumer, err := nats.NewJetStreamConsumer(context.Background(), jetstreamClient, cfg.NatsProcessedEnvelopeStream, "serviceName", cfg.NatsProcessedEnvelopeSubject)
+	if err != nil {
+		log.Fatalf("Failed to create JetStream consumer: %v", err)
+	}
+
+	consumerHandler, err := nats.NewConsumerHandler(consumer, messageHandler, cfg.NatsProcessedEnvelopeBatchSize, cfg.NatsProcessedEnvelopeBatchWait)
+	if err != nil {
+		log.Fatalf("Failed to create consumer handler: %v", err)
 	}
 
 	edMgr := domain.NewEndDeviceManager(edStore, ttnClient, cfg.ApplicationId, xid.StringId, protobuf.Validate)
@@ -203,7 +260,9 @@ func main() {
 		runner.WithCloser(mux.NewCloser(srv)),
 		runner.WithCloser(telemetry.MeterProviderCloser(meterProvider)),
 		runner.WithCloser(telemetry.TracerProviderCloser(tracerProvider)),
+		runner.WithAppProcess(nats.ConsumerRunner(consumerHandler)),
 		runner.WithCloser(telemetry.LoggerProviderCloser()),
+		runner.WithCloser(nats.ConnectionCloser(natsConnection)),
 	)
 
 	r.Run()

@@ -1,4 +1,4 @@
-package postgres
+package clickhouse
 
 import (
 	"context"
@@ -6,30 +6,25 @@ import (
 	"embed"
 	"log/slog"
 
+	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 	"github.com/pressly/goose/v3"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 //go:embed goose/*.sql
 var migrations embed.FS
 
-func Migrations() embed.FS {
-	return migrations
-}
-
 func RunMigrations(ctx context.Context, connUrl string) error {
-	db, err := sql.Open("pgx", connUrl)
+	db, err := sql.Open("clickhouse", connUrl)
 	if err != nil {
 		return stacktrace.NewStackTraceError(err)
 	}
 
 	defer db.Close()
 
-	slog.Info("applying goose migrations for postgres")
+	slog.Info("applying goose migrations for clickhouse")
 
-	err = goose.SetDialect("postgres")
+	err = goose.SetDialect("clickhouse")
 	if err != nil {
 		return stacktrace.NewStackTraceError(err)
 	}

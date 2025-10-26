@@ -1,8 +1,11 @@
 package nats
 
 import (
+	"context"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/ponix-dev/ponix/internal/runner"
 	"github.com/ponix-dev/ponix/internal/telemetry/stacktrace"
 )
 
@@ -49,4 +52,14 @@ func NewJetStream(nc *nats.Conn) (jetstream.JetStream, error) {
 	}
 
 	return js, nil
+}
+
+func ConnectionCloser(nc *nats.Conn) runner.RunnerFunc {
+	return func(_ctx context.Context) func() error {
+		return func() error {
+			nc.Close()
+
+			return nil
+		}
+	}
 }

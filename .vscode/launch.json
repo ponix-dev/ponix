@@ -9,7 +9,31 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "./temp/main.go"
+            "program": "./cmd/ponix-all-in-one/main.go",
+            "envFile": "${workspaceFolder}/.env",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+                "PORT": "3001",
+                "DATABASE_PASSWORD": "ponix",
+                "DATABASE_USERNAME": "ponix",
+                "DATABASE_URL": "localhost:5432",
+                "DATABASE": "ponix",
+                "TTN_APPLICATION": "ponix-cloud",
+                "TTN_SERVER_NAME": "ponix",
+                "TTN_REGION": "nam1",
+                "NATS_URL": "nats://localhost:4222",
+                "NATS_PROCESSED_ENVELOPE_STREAM": "processed_envelopes",
+                "NATS_PROCESSED_ENVELOPE_SUBJECT": "processed.envelopes.>",
+                "NATS_PROCESSED_ENVELOPE_BATCH_SIZE": "30",
+                "NATS_PROCESSED_ENVELOPE_BATCH_WAIT": "5s",
+                "CLICKHOUSE_ADDR": "localhost:9000",
+                "CLICKHOUSE_USER": "ponix",
+                "CLICKHOUSE_PASS": "ponix",
+                "CLICKHOUSE_DB": "ponix",
+                "CLICKHOUSE_PROCESSED_ENVELOPE_TABLE": "processed_envelopes",
+                "ATLAS_PATH": "${env:HOME}/.local/share/mise/installs/atlas/0.35.0/atlas"
+            }
         }
     ]
 }

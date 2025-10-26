@@ -14,27 +14,27 @@ type ProcessedEnvelopeProducer interface {
 	ProduceProcessedEnvelope(ctx context.Context, envelope *envelopev1.ProcessedEnvelope) error
 }
 
-// ProcessedEnvelopeWriter persists ProcessedEnvelope messages to storage.
-type ProcessedEnvelopeWriter interface {
-	WriteProcessedEnvelope(ctx context.Context, envelope ...*envelopev1.ProcessedEnvelope) error
+// ProcessedEnvelopeStorer persists ProcessedEnvelope messages to storage.
+type ProcessedEnvelopeStorer interface {
+	StoreProcessedEnvelopes(ctx context.Context, envelope ...*envelopev1.ProcessedEnvelope) error
 }
 
-// DataEnvelopeService orchestrates the ingestion and processing of data envelopes.
-type DataEnvelopeService struct {
+// DataEnvelopeManager orchestrates the ingestion and processing of data envelopes.
+type DataEnvelopeManager struct {
 	producer ProcessedEnvelopeProducer
-	writer   ProcessedEnvelopeWriter
+	store    ProcessedEnvelopeStorer
 }
 
-// NewDataEnvelopeService creates a new instance of DataEnvelopeService with the provided producer and writer.
-func NewDataEnvelopeService(p ProcessedEnvelopeProducer, w ProcessedEnvelopeWriter) *DataEnvelopeService {
-	return &DataEnvelopeService{
+// NewDataEnvelopeManager creates a new instance of DataEnvelopeService with the provided producer and store.
+func NewDataEnvelopeManager(p ProcessedEnvelopeProducer, w ProcessedEnvelopeStorer) *DataEnvelopeManager {
+	return &DataEnvelopeManager{
 		producer: p,
-		writer:   w,
+		store:    w,
 	}
 }
 
 // IngestDataEnvelope receives a raw data envelope, adds processing metadata, and publishes it to the producer.
-func (srv *DataEnvelopeService) IngestDataEnvelope(ctx context.Context, envelope *envelopev1.DataEnvelope) error {
+func (mgr *DataEnvelopeManager) IngestDataEnvelope(ctx context.Context, envelope *envelopev1.DataEnvelope) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "IngestDataEnvelope")
 	defer span.End()
 
@@ -45,16 +45,16 @@ func (srv *DataEnvelopeService) IngestDataEnvelope(ctx context.Context, envelope
 		ProcessedAt: timestamppb.New(time.Now().UTC()),
 	}.Build()
 
-	return srv.producer.ProduceProcessedEnvelope(ctx, processedEnvelope)
+	return mgr.producer.ProduceProcessedEnvelope(ctx, processedEnvelope)
 }
 
 // IngestProcessedEnvelope receives a processed envelope and persists it via the writer.
 // This is typically called by a message consumer after receiving from the producer.
-func (srv *DataEnvelopeService) IngestProcessedEnvelope(ctx context.Context, envelopes ...*envelopev1.ProcessedEnvelope) error {
+func (mgr *DataEnvelopeManager) IngestProcessedEnvelope(ctx context.Context, envelopes ...*envelopev1.ProcessedEnvelope) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "IngestProcessedEnvelope")
 	defer span.End()
 
-	err := srv.writer.WriteProcessedEnvelope(ctx, envelopes...)
+	err := mgr.store.StoreProcessedEnvelopes(ctx, envelopes...)
 	if err != nil {
 		return err
 	}
