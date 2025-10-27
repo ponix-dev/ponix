@@ -9,7 +9,6 @@ A monorepo for ponix software written in go
 - Go 1.24+
 - Docker & Docker Compose
 - Mage build tool
-- Cloudflare account with tunnel credentials
 - Tilt
 
 ### Docker Services
@@ -17,28 +16,10 @@ A monorepo for ponix software written in go
 The local development environment uses Docker Compose to orchestrate the following services:
 
 - **ponix-all-in-one**: Main application server (port 3001)
-- **PostgreSQL**: Database server (port 5432)
-- **NATS**: Message broker cluster (3 nodes)
-- **InfluxDB**: Time-series database for metrics (port 8086)
-- **Telegraf**: Metrics collector (reads from NATS, writes to InfluxDB)
-- **Grafana LGTM Stack**: Observability platform (port 3000)
-- **Cloudflared**: Cloudflare tunnel for secure external access
-
-### Cloudflared Tunnel Configuration
-
-The project uses Cloudflare tunnels to expose the local development API securely at `api.ponix.dev`.
-
-#### Setup Requirements
-
-1. **Credentials**: Place your Cloudflare tunnel credentials at:
-   - `$HOME/.cloudflared/ponix-api.json` - Tunnel credentials
-   - `$HOME/.cloudflared/cert.pem` - Cloudflare certificate
-
-2. **Configuration**: The tunnel configuration is stored in `.cloudflared/cloudflared-config.yaml`:
-   - Tunnel name: `ponix`
-   - Hostname: `api.ponix.dev` → `ponix-all-in-one:3001`
-   - Protocol: HTTP/2 with 2 HA connections
-   - Metrics endpoint: `:8080`
+- **PostgreSQL**: Relational database for metadata and authorization (port 5432)
+- **ClickHouse**: Columnar database for time-series IoT data storage (ports 8123, 9000)
+- **NATS**: Message broker with JetStream for event streaming (ports 4222, 8222, 6222)
+- **Grafana LGTM Stack**: Observability platform with OpenTelemetry (port 3000)
 
 ### Quick Start
 
@@ -54,26 +35,35 @@ The project uses Cloudflare tunnels to expose the local development API securely
 
 3. **Access the services**:
    - API (local): http://localhost:3001
-   - API (tunnel): https://api.ponix.dev
-   - Grafana: http://localhost:3000
-   - InfluxDB: http://localhost:8086
+   - Grafana (LGTM): http://localhost:3000
+   - ClickHouse HTTP: http://localhost:8123
    - NATS monitoring: http://localhost:8222
 
 ### Directory Structure
 
 ```
-.cloudflared/          # Cloudflared tunnel configuration
-.influxdb/             # InfluxDB and Telegraf configurations
 cmd/                   # Application entry points
-internal/              # Internal packages
-schema/                # Database schema and queries
+internal/
+  ├─ clickhouse/       # ClickHouse connection and data storage
+  ├─ nats/             # NATS JetStream producers and consumers
+  ├─ postgres/         # PostgreSQL migrations and SQLC queries
+  ├─ domain/           # Business logic and domain models
+  └─ connectrpc/       # RPC service handlers
+schema/
+  ├─ postgres/         # PostgreSQL schema and queries
+  └─ clickhouse/       # ClickHouse schema definitions
 ```
 
 ### Database Management
 
+**PostgreSQL (Metadata & Authorization)**:
 - Create migrations: `mage db:migrate <name>`
 - Generate SQLC code: `mage db:gen`
-- Schema location: `schema/schema.sql`
+- Schema location: `schema/postgres/schema.sql`
+
+**ClickHouse (Time-Series IoT Data)**:
+- Migrations auto-run on startup from `internal/clickhouse/goose/`
+- Schema location: `schema/clickhouse/schema.sql`
 
 ### Testing
 
@@ -84,7 +74,8 @@ go test ./...
 ### Environment Variables
 
 Key environment variables are configured in `docker-compose.yaml`:
-- Database connection settings
-- TTN (The Things Network) configuration
-- OpenTelemetry endpoints
-- InfluxDB tokens and organization
+- **PostgreSQL**: Database connection settings (relational data)
+- **ClickHouse**: Time-series database connection (IoT data)
+- **NATS**: JetStream configuration for event streaming
+- **TTN**: The Things Network integration settings
+- **OpenTelemetry**: OTLP endpoint for observability

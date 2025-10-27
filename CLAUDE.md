@@ -5,27 +5,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Ponix Project - Claude Instructions
 
 ## Project Overview
-Go-based monorepo for ponix IoT platform using Connect-RPC for API communication, PostgreSQL for data persistence, and Casbin for authorization.
+Go-based monorepo for ponix IoT platform using Connect-RPC for API communication, PostgreSQL for metadata/authorization, ClickHouse for time-series IoT data, NATS JetStream for event streaming, and Casbin for authorization.
 
 ## Key Technologies
 - Go 1.24
 - Connect-RPC (gRPC-compatible) with Protocol Buffers
-- PostgreSQL with sqlc for type-safe SQL
-- Goose for database migrations
+- PostgreSQL with sqlc for type-safe SQL (metadata & authorization)
+- ClickHouse for time-series IoT data storage
+- Goose for database migrations (both PostgreSQL and ClickHouse)
 - Casbin for RBAC authorization
+- NATS JetStream for event streaming and message processing
 - OpenTelemetry for observability (logs, metrics, traces)
 - Chi router for HTTP routing
 - Docker Compose for local development
-- NATS for messaging
-- InfluxDB + Telegraf for metrics storage
 
 ## Build and Development Commands
 
 ### Mage Commands (primary build tool)
-- `mage stack:up` - Start all Docker dependencies (PostgreSQL, NATS, InfluxDB, Grafana, etc.)
+- `mage stack:up` - Start all Docker dependencies (PostgreSQL, NATS, ClickHouse, Grafana, etc.)
 - `mage stack:down` - Stop all Docker dependencies
-- `mage db:gen` - Generate database code with sqlc (run after modifying SQL files)
-- `mage db:migrate <name>` - Create new database migration with Goose
+- `mage db:gen` - Generate PostgreSQL database code with sqlc (run after modifying SQL files)
+- `mage db:migrate <name>` - Create new PostgreSQL database migration with Goose
 
 ### Standard Go Commands
 - `go run ./cmd/ponix-all-in-one` - Run the main application
@@ -36,8 +36,10 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 - `go vet ./...` - Run static analysis
 
 ### Database Workflow
-1. Modify schema in `schema/schema.sql` for tables/indexes
-2. Add queries to entity-specific files under `schema/` (e.g., `schema/end_device.sql`)
+
+#### PostgreSQL (Relational Data)
+1. Modify schema in `schema/postgres/schema.sql` for tables/indexes
+2. Add queries to entity-specific files under `schema/postgres/` (e.g., `schema/postgres/end_device.sql`)
 3. If creating new query file, add it to `sqlc.yaml` queries section
 4. Run `mage db:migrate <migration_name>` to create migration
 5. Run `mage db:gen` to regenerate type-safe Go code
@@ -45,8 +47,18 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 **File Locations:**
 - Migrations: `internal/postgres/goose/`
 - Generated code: `internal/postgres/sqlc/`
-- Schema definition: `schema/schema.sql`
-- Query files: `schema/*.sql`
+- Schema definition: `schema/postgres/schema.sql`
+- Query files: `schema/postgres/*.sql`
+
+#### ClickHouse (Time-Series Data)
+1. Modify schema in `schema/clickhouse/schema.sql`
+2. Create migration manually in `internal/clickhouse/goose/`
+3. Migrations run automatically on application startup
+
+**File Locations:**
+- Migrations: `internal/clickhouse/goose/`
+- Schema definition: `schema/clickhouse/schema.sql`
+- Go integration: `internal/clickhouse/envelope.go`
 
 ## High-Level Architecture
 
@@ -55,20 +67,36 @@ Go-based monorepo for ponix IoT platform using Connect-RPC for API communication
 ┌─ cmd/ponix-all-in-one/         Entry point, service initialization
 ├─ internal/connectrpc/          RPC handlers (API layer)
 ├─ internal/domain/              Business logic and domain models
-├─ internal/postgres/            Data persistence layer
-│  ├─ goose/                    Database migrations
+├─ internal/postgres/            Relational data persistence (metadata)
+│  ├─ goose/                    PostgreSQL migrations
 │  └─ sqlc/                     Generated type-safe queries
+├─ internal/clickhouse/          Time-series data persistence (IoT data)
+│  ├─ goose/                    ClickHouse migrations
+│  └─ envelope.go               Batch envelope storage
+├─ internal/nats/                Event streaming and message processing
+│  ├─ producer.go               JetStream message publishing
+│  └─ consumer.go               JetStream message consumption with batching
 ├─ internal/casbin/              Authorization enforcement
 └─ internal/telemetry/           OpenTelemetry instrumentation
 ```
 
 ### Core Services and Data Flow
+
+#### RPC Request Flow
 1. **RPC Request** → ConnectRPC Handler
 2. **Authentication** → Extract user from context (currently hardcoded as `dev-user-123`)
 3. **Authorization** → Casbin enforcer checks permissions
 4. **Business Logic** → Domain layer processes request
-5. **Data Access** → PostgreSQL via SQLC-generated code
+5. **Data Access** → PostgreSQL via SQLC-generated code (metadata)
 6. **Response** → ConnectRPC response with proper error codes
+
+#### IoT Data Ingestion Flow
+1. **Device Data** → Webhook endpoint receives IoT data
+2. **Envelope Creation** → Domain layer creates ProcessedEnvelope
+3. **Event Publishing** → NATS JetStream producer publishes envelope
+4. **Batch Processing** → NATS consumer fetches batches (configurable size/wait time)
+5. **Storage** → ClickHouse stores batches of processed envelopes
+6. **Acknowledgment** → Messages acknowledged on successful storage
 
 ### Multi-Tenancy Model
 - All entities scoped by `organization_id`
@@ -121,14 +149,17 @@ func (s *Service) Method(ctx context.Context, req *Request) (*Response, error) {
 
 ### External Integrations
 - **The Things Network (TTN)** - LoRaWAN network server integration
-- **NATS** - Message broker for webhook events
-- **InfluxDB** - Time-series metrics storage via Telegraf
+- **NATS JetStream** - Event streaming with durable consumers and batch processing
+- **ClickHouse** - Columnar time-series storage for IoT telemetry data
 
 ### Service Dependencies
 - Services initialized in `cmd/ponix-all-in-one/main.go`
 - Dependency injection via constructor parameters
-- Shared database connection pool
+- Shared PostgreSQL connection pool (metadata)
+- Shared ClickHouse connection (time-series data)
+- NATS JetStream client for event streaming
 - Common telemetry and authorization middleware
+- Background consumer runners for message processing
 
 ## Code Style Requirements
 
