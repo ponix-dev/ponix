@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM debian:bookworm-slim AS builder
+FROM debian:trixie-slim AS builder
 SHELL ["/bin/bash", "-c"]
 ENV MISE_VERSION=v2024.9.10
 
@@ -17,12 +17,15 @@ RUN mise trust && mise install --yes && \
 
 COPY go.mod go.sum ./
 
+RUN eval "$(mise hook-env --shell=bash)" && \
+    go mod download && go mod verify
+
 COPY . .
 
 RUN eval "$(mise hook-env --shell=bash)" && \
     go build -o ponix-all-in-one ./cmd/ponix-all-in-one/main.go
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ENV USER_ID=65535
 ENV GROUP_ID=65535
@@ -37,5 +40,7 @@ RUN useradd -ms /bin/bash ponix
 
 USER ponix
 WORKDIR /home/ponix
+
+ENV PATH="/home/ponix"
 
 ENTRYPOINT ["./ponix-all-in-one"]

@@ -37,8 +37,8 @@ func (DB) Gen() error {
 }
 
 // generates a database migration with a given name
-func (DB) Migrate(migration string) error {
-	err := sh.Run("atlas", "migrate", "diff", migration, "--dir", "file://internal/postgres/atlas", "--to", "file://schema/schema.sql", "--dev-url", "docker://postgres/15/dev?search_path=public")
+func (DB) Migrate(db string, migration string) error {
+	err := sh.Run("goose", "create", migration, "sql", "-dir", fmt.Sprintf("internal/%s/goose", db))
 	if err != nil {
 		return err
 	}

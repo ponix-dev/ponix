@@ -2,12 +2,12 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries:
-      - "./schema/end_device.sql"
-      - "./schema/lorawan.sql"
-      - "./schema/organization.sql"
-      - "./schema/user.sql"
-      - "./schema/user_organizations.sql"
-    schema: "./schema/schema.sql"
+      - "./schema/postgres/end_device.sql"
+      - "./schema/postgres/lorawan.sql"
+      - "./schema/postgres/organization.sql"
+      - "./schema/postgres/user.sql"
+      - "./schema/postgres/user_organizations.sql"
+    schema: "./schema/postgres/schema.sql"
     gen:
       go:
         package: "sqlc"

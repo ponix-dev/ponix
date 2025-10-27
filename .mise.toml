@@ -1,10 +1,12 @@
 [tools]
 golang = "latest"
 mage = "latest"
-atlas = "latest"
 tilt = "latest"
 
 
 [env]
 GOPROXY = ""
 _.file = '.env'
+
+[tasks.install-tools]
+run = "mise install && brew install goose"

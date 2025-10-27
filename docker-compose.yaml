@@ -9,16 +9,27 @@ services:
       PORT: "3001"
       DATABASE_PASSWORD: ponix
       DATABASE_USERNAME: ponix
-      DATABASE_URL: db:5432
+      DATABASE_URL: postgres:5432
       DATABASE: ponix
       TTN_APPLICATION: ponix-cloud
       TTN_SERVER_NAME: ponix
       TTN_REGION: nam1
+      NATS_URL: nats://ponix-nats:4222
+      NATS_PROCESSED_ENVELOPE_STREAM: processed_envelopes
+      NATS_PROCESSED_ENVELOPE_SUBJECT: processed.envelopes.>
+      NATS_PROCESSED_ENVELOPE_BATCH_SIZE: 30
+      NATS_PROCESSED_ENVELOPE_BATCH_WAIT: 5s
+      CLICKHOUSE_ADDR: ponix-clickhouse:9000
+      CLICKHOUSE_USER: ponix
+      CLICKHOUSE_PASS: ponix
+      CLICKHOUSE_DB: ponix
+      CLICKHOUSE_PROCESSED_ENVELOPE_TABLE: processed_envelopes
+      ATLAS_PATH: atlas
     env_file:
       - .env
     depends_on:
       - otel-lgtm
-      - db
+      - postgres
     networks:
       - ponix
   otel-lgtm:
@@ -30,27 +41,22 @@ services:
     networks:
       - ponix
   nats:
-    image: nats
+    image: nats:latest
+    container_name: ponix-nats
     ports:
-      - "8222:8222"
-    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # HTTP management
+      - "6222:6222"  # Cluster routing
+    command:
+      - "-js"        # Enable JetStream
+      - "-m"         # Enable monitoring
+      - "8222"       # Monitoring port
+    volumes:
+      - nats-data:/data
+    restart: unless-stopped
     networks:
       - ponix
-  nats-1:
-    image: nats
-    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
-    networks:
-      - ponix
-    depends_on:
-      - nats
-  nats-2:
-    image: nats
-    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
-    networks:
-      - ponix
-    depends_on:
-      - nats
-  db:
+  postgres:
     image: postgres
     ports:
       - 5432:5432
@@ -60,52 +66,36 @@ services:
       POSTGRES_DB: ponix
     networks:
       - ponix
-  # influxdb:
-  #   image: influxdb:2.7-alpine
-  #   ports:
-  #     - 8086:8086
-  #   environment:
-  #     DOCKER_INFLUXDB_INIT_MODE: setup
-  #     DOCKER_INFLUXDB_INIT_USERNAME: admin
-  #     DOCKER_INFLUXDB_INIT_PASSWORD: admin123456
-  #     DOCKER_INFLUXDB_INIT_ORG: ponix
-  #     DOCKER_INFLUXDB_INIT_BUCKET: webhooks
-  #     DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ponix-super-secret-auth-token
-  #   volumes:
-  #     - influxdb-data:/var/lib/influxdb2
-  #     - influxdb-config:/etc/influxdb2
-  #   networks:
-  #     - ponix
-  # telegraf:
-  #   image: telegraf:1.31-alpine
-  #   volumes:
-  #     - ./.influxdb/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-  #   environment:
-  #     INFLUX_TOKEN: ponix-super-secret-auth-token
-  #     INFLUX_ORG: ponix
-  #     INFLUX_BUCKET: webhooks
-  #     INFLUX_URL: http://influxdb:8086
-  #   depends_on:
-  #     - influxdb
-  #     - nats
-  #   networks:
-  #     - ponix
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    command: tunnel --config /etc/cloudflared/config.yaml run
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: ponix-clickhouse
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native client
+    environment:
+      CLICKHOUSE_DB: ponix
+      CLICKHOUSE_USER: ponix
+      CLICKHOUSE_PASSWORD: ponix
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     volumes:
-      - ./.cloudflared/cloudflared-config.yaml:/etc/cloudflared/config.yaml:ro
-      - ${HOME}/.cloudflared/ponix-api.json:/etc/cloudflared/credentials.json:ro
-      - ${HOME}/.cloudflared/cert.pem:/etc/cloudflared/cert.pem:ro 
-    depends_on:
-      - ponix-all-in-one
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    restart: unless-stopped
     networks:
       - ponix
-    restart: unless-stopped
 
 networks:
   ponix:
     name: ponix
+
 volumes:
-  influxdb-data:
-  influxdb-config:
+  nats-data:
+    driver: local
+  clickhouse-data:
+    driver: local
+  clickhouse-logs:
+    driver: local
