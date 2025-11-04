@@ -176,6 +176,7 @@ func main() {
 	}
 
 	edMgr := domain.NewEndDeviceManager(edStore, ttnClient, cfg.ApplicationId, xid.StringId, protobuf.Validate)
+	edDataMgr := domain.NewEndDeviceDataManager(envelopeStore, protobuf.Validate)
 	lorawanMgr := domain.NewLoRaWANManager(edStore, xid.StringId, protobuf.Validate)
 	userOrgMgr := domain.NewUserOrganizationManager(userOrgStore, organizationEnforcer, protobuf.Validate)
 	organizationManager := domain.NewOrganizationManager(
@@ -242,6 +243,15 @@ func main() {
 
 		mux.WithHandler(iotv1connect.NewLoRaWANServiceHandler(
 			connectrpc.NewLoRaWANHandler(lorawanMgr, lorawanEnforcer),
+			connect.WithInterceptors(
+				authenticationInterceptor,
+				superAdminInterceptor,
+				protovalidateInterceptor,
+			),
+		)),
+
+		mux.WithHandler(iotv1connect.NewEndDeviceDataServiceHandler(
+			connectrpc.NewEndDeviceDataHandler(edDataMgr, endDeviceEnforcer),
 			connect.WithInterceptors(
 				authenticationInterceptor,
 				superAdminInterceptor,
