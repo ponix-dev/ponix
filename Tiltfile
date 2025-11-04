@@ -18,4 +18,4 @@ docker_build('ponix-all-in-one:latest',
 )
 
 
-docker_compose('./docker-compose.yaml')
+docker_compose('./docker/docker-compose.service.yaml')
