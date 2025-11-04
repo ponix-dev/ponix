@@ -34,15 +34,17 @@ func NewDataEnvelopeManager(p ProcessedEnvelopeProducer, w ProcessedEnvelopeStor
 }
 
 // IngestDataEnvelope receives a raw data envelope, adds processing metadata, and publishes it to the producer.
-func (mgr *DataEnvelopeManager) IngestDataEnvelope(ctx context.Context, envelope *envelopev1.DataEnvelope) error {
+// The organizationID parameter identifies which organization owns the data.
+func (mgr *DataEnvelopeManager) IngestDataEnvelope(ctx context.Context, envelope *envelopev1.DataEnvelope, organizationID string) error {
 	ctx, span := telemetry.Tracer().Start(ctx, "IngestDataEnvelope")
 	defer span.End()
 
 	processedEnvelope := envelopev1.ProcessedEnvelope_builder{
-		EndDeviceId: envelope.GetEndDeviceId(),
-		OccurredAt:  envelope.GetOccurredAt(),
-		Data:        envelope.GetData(),
-		ProcessedAt: timestamppb.New(time.Now().UTC()),
+		OrganizationId: organizationID,
+		EndDeviceId:    envelope.GetEndDeviceId(),
+		OccurredAt:     envelope.GetOccurredAt(),
+		Data:           envelope.GetData(),
+		ProcessedAt:    timestamppb.New(time.Now().UTC()),
 	}.Build()
 
 	return mgr.producer.ProduceProcessedEnvelope(ctx, processedEnvelope)

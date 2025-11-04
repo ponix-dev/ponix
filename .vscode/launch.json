@@ -32,7 +32,6 @@
                 "CLICKHOUSE_PASS": "ponix",
                 "CLICKHOUSE_DB": "ponix",
                 "CLICKHOUSE_PROCESSED_ENVELOPE_TABLE": "processed_envelopes",
-                "ATLAS_PATH": "${env:HOME}/.local/share/mise/installs/atlas/0.35.0/atlas"
             }
         }
     ]

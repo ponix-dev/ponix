@@ -1,37 +1,6 @@
-name: ponix
+name: ponix-deps
+
 services:
-  ponix-all-in-one:
-    image: ponix-all-in-one:latest
-    ports:
-      - 3001:3001
-    environment:
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
-      PORT: "3001"
-      DATABASE_PASSWORD: ponix
-      DATABASE_USERNAME: ponix
-      DATABASE_URL: postgres:5432
-      DATABASE: ponix
-      TTN_APPLICATION: ponix-cloud
-      TTN_SERVER_NAME: ponix
-      TTN_REGION: nam1
-      NATS_URL: nats://ponix-nats:4222
-      NATS_PROCESSED_ENVELOPE_STREAM: processed_envelopes
-      NATS_PROCESSED_ENVELOPE_SUBJECT: processed.envelopes.>
-      NATS_PROCESSED_ENVELOPE_BATCH_SIZE: 30
-      NATS_PROCESSED_ENVELOPE_BATCH_WAIT: 5s
-      CLICKHOUSE_ADDR: ponix-clickhouse:9000
-      CLICKHOUSE_USER: ponix
-      CLICKHOUSE_PASS: ponix
-      CLICKHOUSE_DB: ponix
-      CLICKHOUSE_PROCESSED_ENVELOPE_TABLE: processed_envelopes
-      ATLAS_PATH: atlas
-    env_file:
-      - .env
-    depends_on:
-      - otel-lgtm
-      - postgres
-    networks:
-      - ponix
   otel-lgtm:
     image: grafana/otel-lgtm
     ports:
@@ -40,6 +9,7 @@ services:
       - 4318:4318
     networks:
       - ponix
+
   nats:
     image: nats:latest
     container_name: ponix-nats
@@ -56,6 +26,7 @@ services:
     restart: unless-stopped
     networks:
       - ponix
+
   postgres:
     image: postgres
     ports:
@@ -66,6 +37,7 @@ services:
       POSTGRES_DB: ponix
     networks:
       - ponix
+
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     container_name: ponix-clickhouse
