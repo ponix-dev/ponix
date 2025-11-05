@@ -3,8 +3,8 @@ module github.com/ponix-dev/ponix
 go 1.24.0
 
 require (
-	buf.build/gen/go/ponix/ponix/connectrpc/go v1.19.1-20251104172552-1992a264d66f.2
-	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251104192500-304d89678dfe.1
+	buf.build/gen/go/ponix/ponix/connectrpc/go v1.19.1-20251105022230-76aad410c133.2
+	buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251105022230-76aad410c133.1
 	buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2
 	buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1
 	connectrpc.com/connect v1.19.1

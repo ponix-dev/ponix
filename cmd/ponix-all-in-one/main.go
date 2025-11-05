@@ -162,7 +162,7 @@ func main() {
 
 	processedEnvelopeProducer := nats.NewProcessedEnvelopeProducer(jetstreamClient, cfg.NatsProcessedEnvelopeStream)
 
-	envelopeManager := domain.NewDataEnvelopeManager(processedEnvelopeProducer, envelopeStore)
+	envelopeManager := domain.NewDataEnvelopeManager(processedEnvelopeProducer, envelopeStore, edStore)
 
 	messageHandler := nats.NewProcessedEnvelopeMessageHandler(envelopeManager)
 	consumer, err := nats.NewJetStreamConsumer(context.Background(), jetstreamClient, cfg.NatsProcessedEnvelopeStream, "serviceName", cfg.NatsProcessedEnvelopeSubject)
@@ -257,6 +257,12 @@ func main() {
 				superAdminInterceptor,
 				protovalidateInterceptor,
 			),
+		)),
+
+		// Data ingestion handler (no auth interceptors for MVP)
+		mux.WithHandler(iotv1connect.NewDataIngestionServiceHandler(
+			connectrpc.NewIngestionHandler(envelopeManager),
+			connect.WithInterceptors(protovalidateInterceptor),
 		)),
 	)
 	if err != nil {

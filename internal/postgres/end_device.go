@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	iotv1 "buf.build/gen/go/ponix/ponix/protocolbuffers/go/iot/v1"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ponix-dev/ponix/internal/postgres/sqlc"
@@ -46,7 +48,7 @@ func (store *EndDeviceStore) AddEndDevice(ctx context.Context, endDevice *iotv1.
 		Description:    pgtype.Text{String: endDevice.GetDescription(), Valid: endDevice.GetDescription() != ""},
 		OrganizationID: organizationID,
 		Status:         int32(endDevice.GetStatus()),
-		DataType:       int32(endDevice.GetDataType()),
+		DataType:       int32(endDevice.GetDataType()), // Deprecated field, will be nullable after migration
 		HardwareType:   int32(endDevice.GetHardwareType()),
 	}
 
@@ -55,11 +57,12 @@ func (store *EndDeviceStore) AddEndDevice(ctx context.Context, endDevice *iotv1.
 		return stacktrace.NewStackTraceError(err)
 	}
 
+	// Add hardware-specific configuration if needed
 	switch endDevice.GetHardwareType() {
 	case iotv1.EndDeviceHardwareType_END_DEVICE_HARDWARE_TYPE_LORAWAN:
 		lorawanConfig := endDevice.GetLorawanConfig()
 		if lorawanConfig == nil {
-			return stacktrace.NewStackTraceErrorf("LoRaWAN config required for LoRaWAN device type")
+			return stacktrace.NewStackTraceErrorf("LoRaWAN device requires lorawan_config")
 		}
 
 		lorawanParams := sqlc.CreateLoRaWANConfigParams{
@@ -79,15 +82,14 @@ func (store *EndDeviceStore) AddEndDevice(ctx context.Context, endDevice *iotv1.
 		if err != nil {
 			return stacktrace.NewStackTraceError(err)
 		}
+	case iotv1.EndDeviceHardwareType_END_DEVICE_HARDWARE_TYPE_HTTP:
+		// HTTP devices don't have additional config tables
+		// No additional operations needed
+	default:
+		return stacktrace.NewStackTraceErrorf("unsupported hardware type: %v", endDevice.GetHardwareType())
 	}
 
-	// Commit transaction
-	err = tx.Commit(ctx)
-	if err != nil {
-		return stacktrace.NewStackTraceError(err)
-	}
-
-	return nil
+	return tx.Commit(ctx)
 }
 
 // GetLoRaWANHardwareType retrieves a LoRaWAN hardware type by ID from the database.
@@ -114,6 +116,35 @@ func (store *EndDeviceStore) GetLoRaWANHardwareType(ctx context.Context, hardwar
 	}
 
 	return hardwareDataBuilder.Build(), nil
+}
+
+// GetEndDeviceWithOrganization retrieves an end device and its organization ID
+func (store *EndDeviceStore) GetEndDeviceWithOrganization(ctx context.Context, endDeviceID string) (*iotv1.EndDevice, string, error) {
+	ctx, span := telemetry.Tracer().Start(ctx, "GetEndDeviceWithOrganization")
+	defer span.End()
+
+	endDeviceRow, err := store.db.GetEndDeviceWithOrganization(ctx, endDeviceID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, "", stacktrace.NewStackTraceErrorf("end device not found: %s", endDeviceID)
+		}
+		return nil, "", stacktrace.NewStackTraceError(err)
+	}
+
+	// Build protobuf EndDevice from row (minimal version without config)
+	endDeviceBuilder := iotv1.EndDevice_builder{
+		Id:           endDeviceRow.ID,
+		Name:         endDeviceRow.Name,
+		Status:       iotv1.EndDeviceStatus(endDeviceRow.Status),
+		HardwareType: iotv1.EndDeviceHardwareType(endDeviceRow.HardwareType),
+		DataType:     iotv1.EndDeviceDataType(endDeviceRow.DataType), // Deprecated field
+	}
+
+	if endDeviceRow.Description.Valid {
+		endDeviceBuilder.Description = endDeviceRow.Description.String
+	}
+
+	return endDeviceBuilder.Build(), endDeviceRow.OrganizationID, nil
 }
 
 // GetCompleteLoRaWANDevice retrieves a complete LoRaWAN device with its configuration from the database.

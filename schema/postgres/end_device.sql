@@ -23,3 +23,8 @@ RETURNING *;
 -- name: DeleteEndDevice :exec
 DELETE FROM end_devices
 WHERE id = $1;
+
+-- name: GetEndDeviceWithOrganization :one
+SELECT id, name, description, organization_id, status, data_type, hardware_type, created_at, updated_at
+FROM end_devices
+WHERE id = $1;
