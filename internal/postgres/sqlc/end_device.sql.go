@@ -86,6 +86,29 @@ func (q *Queries) GetEndDevice(ctx context.Context, id string) (EndDevice, error
 	return i, err
 }
 
+const getEndDeviceWithOrganization = `-- name: GetEndDeviceWithOrganization :one
+SELECT id, name, description, organization_id, status, data_type, hardware_type, created_at, updated_at
+FROM end_devices
+WHERE id = $1
+`
+
+func (q *Queries) GetEndDeviceWithOrganization(ctx context.Context, id string) (EndDevice, error) {
+	row := q.db.QueryRow(ctx, getEndDeviceWithOrganization, id)
+	var i EndDevice
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.OrganizationID,
+		&i.Status,
+		&i.DataType,
+		&i.HardwareType,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listEndDevicesByOrganization = `-- name: ListEndDevicesByOrganization :many
 SELECT id, name, description, organization_id, status, data_type, hardware_type, created_at, updated_at FROM end_devices
 WHERE organization_id = $1

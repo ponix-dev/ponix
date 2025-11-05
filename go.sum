@@ -4,10 +4,10 @@ buf.build/gen/go/envoyproxy/protoc-gen-validate/protocolbuffers/go v1.36.2-20221
 buf.build/gen/go/envoyproxy/protoc-gen-validate/protocolbuffers/go v1.36.2-20221025150516-6607b10f00ed.1/go.mod h1:Ne/hCTh/UJzwd4H3lREXhiMtNOLNfxqU8zl7BD01cM8=
 buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.2-20230727201445-fed2dcdcfd69.1 h1:CI0rr/7Y4hGZtyjKrUlCiOBUUSxO9mMAj/h+BiBqUl4=
 buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.2-20230727201445-fed2dcdcfd69.1/go.mod h1:hTOBKINwGHfMDBYzf2rUhU43p7h+ySnNrgEDmT+iOQY=
-buf.build/gen/go/ponix/ponix/connectrpc/go v1.19.1-20251104172552-1992a264d66f.2 h1:NQY1JCqBYea1bMnMTFDXhfHiITS7xDZXvQU7YjcbLQw=
-buf.build/gen/go/ponix/ponix/connectrpc/go v1.19.1-20251104172552-1992a264d66f.2/go.mod h1:i/zOPCp/Lo3BEVC8kQ+oUKZupO2h2cpbcP/JlQ0Iyh0=
-buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251104192500-304d89678dfe.1 h1:I9vtG3WwTSjW4VAJNZ5Udjru5TU2cfEn70z6xJELIQ0=
-buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251104192500-304d89678dfe.1/go.mod h1:BREdexB/QSjHcVedILVvJnx+dPhdlX2B9EJieCVljVQ=
+buf.build/gen/go/ponix/ponix/connectrpc/go v1.19.1-20251105022230-76aad410c133.2 h1:u2FwMFdyVaOPB7PuAsG2eG/iC3lI6FXtZBazuPbhirM=
+buf.build/gen/go/ponix/ponix/connectrpc/go v1.19.1-20251105022230-76aad410c133.2/go.mod h1:O7P4ky1/3l2LaWqP8vERLJ4ELuH6uVP3hbEDUebGelY=
+buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251105022230-76aad410c133.1 h1:6ryOwTwWXcEAB5/4r/RVYr76j819g6Zmu1OswUs0dys=
+buf.build/gen/go/ponix/ponix/protocolbuffers/go v1.36.10-20251105022230-76aad410c133.1/go.mod h1:BREdexB/QSjHcVedILVvJnx+dPhdlX2B9EJieCVljVQ=
 buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2 h1:AEiBV+zpQyqMYdezKNk9B1YwJFyMx1OlxCydKLRli9w=
 buf.build/gen/go/thethingsindustries/lorawan-stack/grpc/go v1.5.1-20241218205946-57dec58bef05.2/go.mod h1:Itpx7XjD1qi8ffcbAKtfzxUfLJ9EXxD1uLLbfr0TZGs=
 buf.build/gen/go/thethingsindustries/lorawan-stack/protocolbuffers/go v1.36.2-20241218205946-57dec58bef05.1 h1:ODEHbQripVSkYEJrjZb/ZPfncoQBxHDsHT2eTmsTkDs=

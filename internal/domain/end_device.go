@@ -17,6 +17,7 @@ type EndDeviceRegister interface {
 type EndDeviceStorer interface {
 	AddEndDevice(ctx context.Context, endDevice *iotv1.EndDevice, organizationId string) error
 	GetLoRaWANHardwareType(ctx context.Context, hardwareTypeId string) (*iotv1.LoRaWANHardwareData, error)
+	GetEndDeviceWithOrganization(ctx context.Context, endDeviceID string) (*iotv1.EndDevice, string, error)
 }
 
 // EndDeviceManager orchestrates end device business logic including creation and external registration.
@@ -56,13 +57,16 @@ func (mgr *EndDeviceManager) CreateEndDevice(ctx context.Context, createReq *iot
 		return nil, err
 	}
 
-	// may want to split this in to function calls when there are more types
+	// Only register with external systems for LoRaWAN devices
 	switch endDevice.GetHardwareType() {
 	case iotv1.EndDeviceHardwareType_END_DEVICE_HARDWARE_TYPE_LORAWAN:
 		err = mgr.endDeviceRegister.RegisterEndDevice(ctx, endDevice)
 		if err != nil {
-			return nil, err
+			return nil, stacktrace.NewStackTraceError(err)
 		}
+	case iotv1.EndDeviceHardwareType_END_DEVICE_HARDWARE_TYPE_HTTP:
+		// HTTP devices don't need external registration
+		// Continue to storage
 	}
 
 	// Store the device in the database
@@ -85,8 +89,8 @@ func (mgr *EndDeviceManager) buildEndDeviceFromRequest(ctx context.Context, endD
 		Name:         createReq.GetName(),
 		Description:  createReq.GetDescription(),
 		Status:       iotv1.EndDeviceStatus_END_DEVICE_STATUS_PENDING,
-		DataType:     createReq.GetDataType(),
 		HardwareType: createReq.GetHardwareType(),
+		// Note: data_type is deprecated and not set
 	}
 
 	// Handle hardware-specific configuration
@@ -97,6 +101,9 @@ func (mgr *EndDeviceManager) buildEndDeviceFromRequest(ctx context.Context, endD
 			return nil, err
 		}
 		endDeviceBuilder.LorawanConfig = lorawanConfig
+	case iotv1.EndDeviceHardwareType_END_DEVICE_HARDWARE_TYPE_HTTP:
+		// HTTP devices don't need additional configuration
+		// Just validate and continue
 	default:
 		return nil, stacktrace.NewStackTraceErrorf("unsupported hardware type: %v", createReq.GetHardwareType())
 	}
